@@ -1,0 +1,75 @@
+{
+  "name": "kyofuuc",
+  "version": "0.0.3",
+  "description": "Simple yet powerful HTTP, WS client with cache and offline support for Typescript + Javascript. For both browser and Node.",
+  "main": "index.ts",
+  "browser": {
+    "./lib/helper/node_classes.js": "./lib/helper/browser_classes.js",
+    "./lib/connector/http/httpConnector.js": "./lib/connector/http/xhrConnector.js"
+  },
+  "jsdelivr": "dist/kyofuuc.min.js",
+  "unpkg": "dist/kyofuuc.min.js",
+  "scripts": {
+    "build": "webpack",
+    "pack": "npm run build & npm pack",
+    "update": "npx -y npm-check-updates -u",
+    "test": "mocha --timeout 20000 --require ts-node/register "
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kyofuuc/kyofuuc-node.git"
+  },
+  "keywords": [
+    "http",
+    "https",
+    "http2",
+    "promise",
+    "request",
+    "url",
+    "nodejs",
+    "javascript",
+    "get",
+    "got",
+    "uri",
+    "axios",
+    "superagent",
+    "node-fetch",
+    "ky",
+    "request",
+    "simple",
+    "curl",
+    "wget",
+    "fetch",
+    "net",
+    "network",
+    "gzip",
+    "brotli",
+    "requests",
+    "human-friendly"
+  ],
+  "author": "Thecarisma",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kyofuuc/kyofuuc-node/issues"
+  },
+  "homepage": "https://github.com/kyofuuc/kyofuuc-node#readme",
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^22.0.0",
+    "express": "^4.19.2",
+    "lz-string": "^1.5.0",
+    "mocha": "^10.7.0",
+    "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.6.3",
+    "typescript": "^5.5.4",
+    "util": "^0.12.5",
+    "webpack": "^5.93.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "ws": "^8.18.0",
+    "xmlhttprequest": "^1.8.0"
+  }
+}
