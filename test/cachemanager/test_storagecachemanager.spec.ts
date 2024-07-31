@@ -1,7 +1,7 @@
 
 import assert from "assert";
 import { Method } from "../../lib/types";
-import { LzEncryptor } from "../LzEncryptor";
+import { LzEncryptor } from "../resc/LzEncryptor";
 import { Utils, Defaults } from "../../lib/helper";
 import { NoSufficientCacheSpaceLeftError } from "../../lib/exception";
 import { LocalStorageCacheManager, SessionStorageCacheManager } from "../../lib/cachemanager";
@@ -30,10 +30,10 @@ it('validate StorageCacheManager options', () => {
 	assert.equal(0, cacheManager1.usedSpace());
 	assert.equal(0, cacheManager2.usedSpace());
 	assert.equal(0, cacheManager3.usedSpace());
-	assert.equal(53, cacheManager1.calculateSpace("1"));
-	assert.equal(63, cacheManager1.calculateSpace("hello world"));
-	assert.equal(63, cacheManager2.calculateSpace(1234567890197));
-	assert.equal(63, cacheManager3.calculateSpace("hello world"));
+	assert.equal(53, cacheManager1.calculateSpace("", "1"));
+	assert.equal(63, cacheManager1.calculateSpace("", "hello world"));
+	assert.equal(63, cacheManager2.calculateSpace("", 1234567890197));
+	assert.equal(63, cacheManager3.calculateSpace("", "hello world"));
 	assert.equal(Defaults.MaxStorageSpace, cacheManager3.availableSpace());
 	assert.equal(Defaults.MaxStorageSpace, cacheManager1.availableSpace());
 	assert.equal(Defaults.MaxStorageSpace, cacheManager2.availableSpace());

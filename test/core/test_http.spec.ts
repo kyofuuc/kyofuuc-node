@@ -3,9 +3,10 @@ import assert from "assert";
 import ffs from "../../lib";
 import app from "../resc/server";
 import { MapCacheManager } from "../../lib/cachemanager";
-import { Method, ResponseType, Response, HttpConfig } from "../../lib/types";
-import { EventQueue, EventQueueType, HandlerType, Http, Interceptor } from "../../lib/core";
-import { KyofuucObject } from "../../lib/helper";
+import { Method, ResponseType, Response } from "../../lib/types";
+import xhrConnector from "../../lib/connector/http/xhrConnector";
+import { EventQueue, EventQueueType, Http } from "../../lib/core";
+import httpConnector from "../../lib/connector/http/httpConnector";
 
 let server: any;
 let port = 3001;
@@ -52,6 +53,44 @@ it('kyofuuc request delete, get, head, options', async () => {
 	const ffsResponseOptions = await ffs.request(`http://127.0.0.1:${port}/options`, { method: Method.OPTIONS, responseType: ResponseType.TEXT });
 	const ffsResponseGet = await Http.getInstance().request(`http://127.0.0.1:${port}/get`, { method: Method.GET, responseType: ResponseType.TEXT });
 	const ffsResponseDelete = await Http.getInstance().request(`http://127.0.0.1:${port}/delete`, { method: Method.DELETE, responseType: ResponseType.TEXT });
+
+	assert.equal(ffsResponseGet.status, 204);
+	assert.equal(ffsResponseHead.status, 204);
+	assert.equal(ffsResponseDelete.status, 204);
+	assert.equal(ffsResponseOptions.status, 204);
+});
+
+it('http request server greet httpConnector', async () => {
+	const response = await Http.getInstance().request(`http://127.0.0.1:${port}/greet`, { connector: httpConnector, method: Method.GET });
+
+	assert.equal(response.status, 200);
+	assert.equal(response.data, "Hello World!");
+});
+
+it('http request server greet xhrConnector', async () => {
+	const response = await Http.getInstance().request(`http://127.0.0.1:${port}/greet`, { connector: xhrConnector, method: Method.GET });
+
+	assert.equal(response.status, 200);
+	assert.equal(response.data, "Hello World!");
+});
+
+it('validate kyofuuc httpConnector request delete, get, head, options', async () => {
+	const ffsResponseHead = await ffs.request(`http://127.0.0.1:${port}/head`, { connector: httpConnector, method: Method.HEAD, responseType: ResponseType.TEXT });
+	const ffsResponseOptions = await ffs.request(`http://127.0.0.1:${port}/options`, { connector: httpConnector, method: Method.OPTIONS, responseType: ResponseType.TEXT });
+	const ffsResponseGet = await Http.getInstance().request(`http://127.0.0.1:${port}/get`, { connector: httpConnector, method: Method.GET, responseType: ResponseType.TEXT });
+	const ffsResponseDelete = await Http.getInstance().request(`http://127.0.0.1:${port}/delete`, { connector: httpConnector, method: Method.DELETE, responseType: ResponseType.TEXT });
+
+	assert.equal(ffsResponseGet.status, 204);
+	assert.equal(ffsResponseHead.status, 204);
+	assert.equal(ffsResponseDelete.status, 204);
+	assert.equal(ffsResponseOptions.status, 204);
+});
+
+it('validate kyofuuc xhrConnector request delete, get, head, options', async () => {
+	const ffsResponseHead = await ffs.request(`http://127.0.0.1:${port}/head`, { connector: xhrConnector, method: Method.HEAD, responseType: ResponseType.TEXT });
+	const ffsResponseOptions = await ffs.request(`http://127.0.0.1:${port}/options`, { connector: xhrConnector, method: Method.OPTIONS, responseType: ResponseType.TEXT });
+	const ffsResponseGet = await Http.getInstance().request(`http://127.0.0.1:${port}/get`, { connector: xhrConnector, method: Method.GET, responseType: ResponseType.TEXT });
+	const ffsResponseDelete = await Http.getInstance().request(`http://127.0.0.1:${port}/delete`, { connector: xhrConnector, method: Method.DELETE, responseType: ResponseType.TEXT });
 
 	assert.equal(ffsResponseGet.status, 204);
 	assert.equal(ffsResponseHead.status, 204);
@@ -169,7 +208,7 @@ it('kyofuuc request basic auth', async () => {
 it('kyofuuc request retry', async () => {
 	let rserver: any;
 	let successful = 0;
-	const cache = MapCacheManager.getInstance();
+	const cache = MapCacheManager.getInstance(); cache.clear();
 
 	EventQueue.getInstance().subscribe(EventQueueType.HTTP_REQUEST, (response: Response) => {
 		successful++;

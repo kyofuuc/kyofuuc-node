@@ -4,9 +4,9 @@ import classes from "../../helper/node_classes";
 import { Defaults, ErrorCode, KyofuucObject, Utils } from "../../helper";
 import { HttpConfig, Response, RequestType, QueueRequest, CompressionProcessor, ResponseType, transformResponseData, transformRequestData } from "../../types";
 
-// TODO treat cancellation
 // TODO treat proxy
-export default function httpConnector(config: HttpConfig, queueRequest?: QueueRequest) {
+// TODO treat cancellation
+export default function httpConnector(config: HttpConfig, queueRequest?: QueueRequest): Promise<Response> {
     return new Promise((resolvePromise, rejectPromise) => {
 
         let rejected = false;
@@ -28,7 +28,7 @@ export default function httpConnector(config: HttpConfig, queueRequest?: QueueRe
 
         const preRequestCachedResults = config.interceptor?.invoke(HandlerType.HTTP_PRE_REQUEST, config).filter((r) => r?.__cached__ === true);
         if (preRequestCachedResults?.length) {
-            resolve(preRequestCachedResults[0].value);
+            resolve(preRequestCachedResults[0] as Response);
             return;
         }
 
@@ -38,7 +38,7 @@ export default function httpConnector(config: HttpConfig, queueRequest?: QueueRe
             acc[header.toLowerCase()] = header;
             return acc;
         }, {});
-        if (!('user-agent' in headerNamesMap)) {
+        if (!Utils.envIsBrowser() && !('user-agent' in headerNamesMap)) {
             headers['User-Agent'] = `kyofuuc/${Defaults.VERSION}`;
         } else {
             if (!headers[headerNamesMap['user-agent']]) {
@@ -80,6 +80,10 @@ export default function httpConnector(config: HttpConfig, queueRequest?: QueueRe
         if (config.bearer && !headerNamesMap.authorization) {
             headers["Authorization"] = `Bearer ${config.bearer}`;
         }
+        if (config.xsrf) {
+            const xsrfValue = (config.xsrf.cookieName ? Utils.getCookie((document ?? {}), config.xsrf.cookieName) : undefined) ?? config.xsrf.value;
+            headers[config.xsrf.headerName] = xsrfValue;
+        }
         let isHttpsRequest = config.parsed?.protocol === "https";
         let agent = isHttpsRequest ? config.httpsAgent : config.httpAgent;
 
@@ -100,7 +104,7 @@ export default function httpConnector(config: HttpConfig, queueRequest?: QueueRe
             options.port = config.parsed?.port;
             options.hostname = config.parsed?.hostname;
         }
-        // TODO treat proxy
+
         const redirectsResponses: any[] = [];
         const transport = (config.transport ?? (isHttpsRequest ? classes.https : classes.http));
 
@@ -149,7 +153,7 @@ export default function httpConnector(config: HttpConfig, queueRequest?: QueueRe
                     return;
                 }
                 res.destroy();
-                onError(Utils.kyofuucError("Response stream aborted", config, ErrorCode.REQUEST_ABORTED, lastReq));
+                onError(Utils.kyofuucError("Request aborted", config, ErrorCode.REQUEST_ABORTED, lastReq));
             });
             res.on('error', function handleStreamError(err: any) {
                 if (lastReq.aborted) return;
@@ -218,11 +222,8 @@ export default function httpConnector(config: HttpConfig, queueRequest?: QueueRe
                         result.redirectsResponses = redirectsResponses;
                     }
                     Utils.resolveResponse(result, resolve, reject);
-                }, reject, true)
+                }, reject, true);
             });
-            if (redirectCount === 0) {
-                config.interceptor?.invoke(HandlerType.HTTP_POST_REQUEST, config);
-            }
 
             req.on('error', (error: any) => {
                 if (req.aborted && error.code !== 'ERR_FR_TOO_MANY_REDIRECTS') return;
@@ -275,6 +276,9 @@ export default function httpConnector(config: HttpConfig, queueRequest?: QueueRe
                 }
             } else {
                 req.end(data);
+            }
+            if (redirectCount === 0) {
+                config.interceptor?.invoke(HandlerType.HTTP_POST_REQUEST, config);
             }
         }
         transportRequest(0);

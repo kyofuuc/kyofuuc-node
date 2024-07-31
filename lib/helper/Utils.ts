@@ -24,6 +24,13 @@ export enum ErrorCode {
 
 }
 
+const _ignoreHeadersDuplicateOf = [
+    'age', 'authorization', 'content-length', 'content-type', 'etag',
+    'expires', 'from', 'host', 'if-modified-since', 'if-unmodified-since',
+    'last-modified', 'location', 'max-forwards', 'proxy-authorization',
+    'referer', 'retry-after', 'user-agent'
+];
+
 export const Utils = {
 
     buildCacheKey(config: HttpConfig) {
@@ -87,6 +94,47 @@ export const Utils = {
             if (`${value}`.endsWith("#_kce_")) used += value.length;
         })
         return used
+    },
+
+    getCookieEntries(document: { cookie: string; }, cb: (key: string, value: string) => void) {
+        const items = document.cookie.split(/; */);
+        for (let item of items) {
+            const cookieParts = item.split('=');
+            cb(cookieParts[0], cookieParts[1]);
+        }
+    },
+
+    cookieSpaceUsed(document: { cookie: string; }) {
+        let used = 0;
+        Utils.getCookieEntries(document, (key: string, value: string) => {
+            if (`${value}`.endsWith("#_kce_")) used += (key.length + value.length);
+        })
+        return used
+    },
+
+    addCookie(document: { cookie: string; }, options: { name: string; value: string; expires?: Date; path?: string; }) {
+        const path = options.path ?? "/";
+        const expires = options.expires ? `; Expires=${options.expires.toUTCString()}` : "";
+        document.cookie = options.name + "=" + (options.value ?? "") + expires + "; Path=" + path;
+    },
+
+    removeCookie(document: { cookie: string; }, name: string) {
+        document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    },
+
+    getCookie(document: { cookie: string; }, name: string) {
+        name = name + "=";
+        let ca = document.cookie?.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return;
     },
 
     randomString(length: number = 10, characters: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789") {
@@ -380,6 +428,60 @@ export const Utils = {
     stringifyAuth(auth?: BasicAuth) {
         if (!auth) return undefined;
         return `${decodeURIComponent(auth.username)}:${decodeURIComponent(auth.password)}`;
+    },
+
+    envIsBrowser() {
+        return !(typeof window === 'undefined');
+    },
+
+    toBase64(value: string) {
+        if (Utils.envIsBrowser()) {
+            return btoa(value);
+        }
+        return Buffer.from(value).toString('base64');
+    },
+
+    fromBase64(value: string) {
+        if (Utils.envIsBrowser()) {
+            return atob(value);
+        }
+        return Buffer.from(value, 'base64').toString();
+    },
+
+    trim(str: string) {
+        return str.trim ? str.trim() : str.replace(/^\s+|\s+$/g, '');
+    },
+
+    length(str: any) {
+        return str.length ?? 0;
+    },
+
+    parseHeaders(headers: string) {
+        let i;
+        let key;
+        let val;
+        let parsed: KyofuucObject<any> = {};
+
+        if (!headers) { return parsed; }
+
+        Utils.forEach(headers.split('\n'), (_: string, line: string) => {
+            i = line.indexOf(':');
+            key = Utils.trim(line.substring(0, i)).toLowerCase();
+            val = Utils.trim(line.substring(i + 1));
+
+            if (key) {
+                if (parsed[key] && _ignoreHeadersDuplicateOf.indexOf(key) >= 0) {
+                    return;
+                }
+                if (key === 'set-cookie') {
+                    parsed[key] = (parsed[key] ? parsed[key] : []).concat([val]);
+                } else {
+                    parsed[key] = parsed[key] ? parsed[key] + ', ' + val : val;
+                }
+            }
+        });
+
+        return parsed;
     },
 
 }

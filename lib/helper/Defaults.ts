@@ -7,6 +7,7 @@ export const Defaults = {
 
     VERSION: "0.0.4",
     MaxObjectEntrySize: 999999,
+    MaxCookieLength: 3800, // 3800 Bytes
     MaxStorageSpace: 5120000, // 5000 * 1024 = 5MB
 
     defaultHttpConnector() {
@@ -25,18 +26,18 @@ export const Defaults = {
     },*/
 
     httpConfig(config: HttpConfig) {
-        if (!config.timeout) config.timeout = 5000;
-        if (!config.maxRetry) config.maxRetry = 99999;
-        if (!config.retryCount) config.retryCount = 0;
-        if (!config.method) config.method = Method.GET;
-        if (!config.maxRedirects) config.maxRedirects = 5;
-        if (!config.responseEncoding) config.responseEncoding = "utf8";
-        if (!config.connector) config.connector = Defaults.defaultHttpConnector();
+        if (config.timeout === undefined) config.timeout = 5000;
+        if (config.maxRetry === undefined) config.maxRetry = 99999;
+        if (config.retryCount === undefined) config.retryCount = 0;
+        if (config.method === undefined) config.method = Method.GET;
+        if (config.maxRedirects === undefined) config.maxRedirects = 5;
+        if (config.responseEncoding === undefined) config.responseEncoding = "utf8";
+        if (config.connector === undefined) config.connector = Defaults.defaultHttpConnector();
         if (Utils.envIsNodeJs() && classes.http) {
             if (!config.httpAgent) config.httpAgent = new classes.http.Agent({ keepAlive: true });
             if (!config.httpsAgent) config.httpsAgent = new classes.https.Agent({ keepAlive: true });
         }
-        if (!config.validateStatus) config.validateStatus = (status: number) => {
+        if (config.validateStatus === undefined) config.validateStatus = (status: number) => {
             return status >= 100 && status < 300;
         };
         return config;

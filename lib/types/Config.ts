@@ -50,6 +50,7 @@ export type HttpConfig = {
     responseType?: string;
     refreshCache?: boolean;
     cacheLifetime?: number;
+    persistCache?: boolean;
     subscriptionKey?: string;
     socketKeepAlive?: number;
     insecureHTTPParser?: any;
@@ -60,7 +61,14 @@ export type HttpConfig = {
     responseEncoding?: string;
     storeRedirectsResponses?: boolean;
     validateStatus?: (status: number) => boolean;
+    onUploadProgress?: (...params: any[]) => any;
+    onDownloadProgress?: (...params: any[]) => any;
     headers?: KyofuucObject<number | string | string[]>;
+    xsrf?: {
+        value?: any;
+        headerName: string;
+        cookieName?: string;
+    };
 
 } & Config;
 

@@ -1,67 +1,72 @@
 
 import assert from "assert";
+import { Mocks } from "../resc/Mocks";
 import { Method } from "../../lib/types";
 import { Defaults } from "../../lib/helper";
-import { LzEncryptor } from "../resc/LzEncryptor";
-import { MapCacheManager } from "../../lib/cachemanager";
+import { Base64Encryptor } from "../resc/Base64Encryptor";
+import { CookieCacheManager } from "../../lib/cachemanager";
 import { NoSufficientCacheSpaceLeftError } from "../../lib/exception";
 
-it('validate MapCacheManager options', () => {
-	const cacheManager1 = new MapCacheManager<number>();
-	const cacheManager2 = new MapCacheManager({ maxEntries: 2 });
-	const cacheManager3 = new MapCacheManager<string>({ bucket: {} });
+it('validate CookieCacheManager options', () => {
+	const bucket = Mocks.mockDocumentCookie();
+	const cacheManager1 = new CookieCacheManager<number>({ bucket });
+	const cacheManager2 = CookieCacheManager.getInstance({ bucket });
+	const cacheManager3 = new CookieCacheManager<string>({ bucket: { cookie: "" } });
 
 	assert.equal(0, cacheManager1.usedSpace());
 	assert.equal(0, cacheManager2.usedSpace());
 	assert.equal(0, cacheManager3.usedSpace());
-	assert.equal(2, cacheManager2.availableSpace());
-	assert.equal(1, cacheManager1.calculateSpace("", 1));
-	assert.equal(1, cacheManager2.calculateSpace("", "1"));
-	assert.equal(1, cacheManager2.calculateSpace("", "one"));
-	assert.equal(1, cacheManager3.calculateSpace("", "two"));
-	assert.equal(Defaults.MaxObjectEntrySize, cacheManager1.availableSpace());
-	assert.equal(Defaults.MaxObjectEntrySize, cacheManager3.availableSpace());
+	assert.equal(53, cacheManager1.calculateSpace("", 1));
+	assert.equal(55, cacheManager2.calculateSpace("", "1"));
+	assert.equal(57, cacheManager2.calculateSpace("", "one"));
+	assert.equal(57, cacheManager3.calculateSpace("", "two"));
+	assert.equal(Defaults.MaxCookieLength, cacheManager1.availableSpace());
+	assert.equal(Defaults.MaxCookieLength, cacheManager2.availableSpace());
+	assert.equal(Defaults.MaxCookieLength, cacheManager3.availableSpace());
 });
 
-it('validate MapCacheManager set', () => {
-	const cacheManager = new MapCacheManager();
+it('validate CookieCacheManager set', () => {
+	const bucket = Mocks.mockDocumentCookie();
+	const cacheManager = new CookieCacheManager({ bucket });
 
 	assert.equal(0, cacheManager.usedSpace());
-	assert.equal(Defaults.MaxObjectEntrySize, cacheManager.availableSpace());
+	assert.equal(Defaults.MaxCookieLength, cacheManager.availableSpace());
 
 	cacheManager.set("key1", "hello one");
-	assert.equal(1, cacheManager.usedSpace());
+	assert.equal(67, cacheManager.usedSpace());
 
 	cacheManager.set("key2", "hello two");
-	assert.equal(2, cacheManager.usedSpace());
+	assert.equal(134, cacheManager.usedSpace());
 
 	cacheManager.set("key1", "hello one again");
-	assert.equal(2, cacheManager.usedSpace());
+	assert.equal(140, cacheManager.usedSpace());
 
 	cacheManager.set("key3", "hello three");
-	assert.equal(3, cacheManager.usedSpace());
+	assert.equal(209, cacheManager.usedSpace());
 
 	cacheManager.set({ url: "/hello" }, "hello three");
-	assert.equal(4, cacheManager.usedSpace());
+	assert.equal(292, cacheManager.usedSpace());
 });
 
-it('validate MapCacheManager no sufficient queue space left', () => {
-	const cacheManager = new MapCacheManager({ maxEntries: 2 });
+it('validate CookieCacheManager no sufficient queue space left', () => {
+	const bucket = Mocks.mockDocumentCookie();
+	const cacheManager = new CookieCacheManager({ bucket });
 
-	assert.doesNotThrow(() => cacheManager.set("key1", "hello one"), NoSufficientCacheSpaceLeftError);
-	assert.doesNotThrow(() => cacheManager.set("key2", "hello two"), NoSufficientCacheSpaceLeftError);
-	assert.throws(() => cacheManager.set("key3", "hello three"), NoSufficientCacheSpaceLeftError);
-	assert.throws(() => cacheManager.set("key4", "hello three"), NoSufficientCacheSpaceLeftError);
-	assert.throws(() => cacheManager.set("key5", "hello three"), NoSufficientCacheSpaceLeftError);
+	assert.doesNotThrow(() => cacheManager.set("key1", Array(100).fill("hello one")), NoSufficientCacheSpaceLeftError);
+	assert.doesNotThrow(() => cacheManager.set("key2", Array(100).fill("hello two")), NoSufficientCacheSpaceLeftError);
+	assert.throws(() => cacheManager.set("key3", Array(1000).fill("hello three")), NoSufficientCacheSpaceLeftError);
+	assert.throws(() => cacheManager.set("key4", Array(1000).fill("hello three")), NoSufficientCacheSpaceLeftError);
+	assert.throws(() => cacheManager.set("key5", Array(1000).fill("hello three")), NoSufficientCacheSpaceLeftError);
 });
 
-it('validate MapCacheManager get', () => {
-	const cacheManager = new MapCacheManager();
+it('validate CookieCacheManager get', () => {
+	const bucket = Mocks.mockDocumentCookie();
+	const cacheManager = new CookieCacheManager({ bucket });
 
 	cacheManager.set("key1", "hello one");
 	cacheManager.set({ url: "/hello", method: Method.POST }, { greeting: "holla" });
 
-	assert.equal(2, cacheManager.usedSpace());
+	assert.equal(158, cacheManager.usedSpace());
 	assert.equal("hello one", cacheManager.getValue("key1"));
 	assert.equal("hello one", cacheManager.get("key1")?.value);
 	assert.equal("object", typeof cacheManager.get({ url: "/hello", method: Method.POST })?.value);
@@ -70,8 +75,9 @@ it('validate MapCacheManager get', () => {
 	assert.deepEqual({ greeting: "holla" }, cacheManager.get({ url: "/hello", method: Method.POST })?.value);
 });
 
-it('validate MapCacheManager has and getValue', () => {
-	const cacheManager = new MapCacheManager();
+it('validate CookieCacheManager has and getValue', () => {
+	const bucket = Mocks.mockDocumentCookie();
+	const cacheManager = new CookieCacheManager({ bucket });
 
 	cacheManager.set("key1", "hello one");
 	cacheManager.set("key2", "hello two");
@@ -81,7 +87,7 @@ it('validate MapCacheManager has and getValue', () => {
 	cacheManager.set({ url: "/hello", method: Method.GET }, {});
 	cacheManager.set({ url: "/hello", method: Method.POST }, { greeting: "holla" });
 
-	assert.equal(7, cacheManager.usedSpace());
+	assert.equal(515, cacheManager.usedSpace());
 	assert.equal(true, cacheManager.has("key1"));
 	assert.equal(true, cacheManager.has("key2"));
 	assert.equal(true, cacheManager.has("key4"));
@@ -109,29 +115,31 @@ it('validate MapCacheManager has and getValue', () => {
 	assert.deepEqual({ greeting: "holla" }, cacheManager.getValue({ url: "/hello", method: Method.POST }));
 });
 
-it('validate MapCacheManager remove and clear', () => {
-	const cacheManager = new MapCacheManager();
-	
+it('validate CookieCacheManager remove and clear', () => {
+	const bucket = Mocks.mockDocumentCookie();
+	const cacheManager = new CookieCacheManager({ bucket });
+
 	cacheManager.set("key1", "hello one");
 	cacheManager.set("key2", "hello two");
 	cacheManager.set("key3", "hello three");
 	cacheManager.set({ url: "/hello", method: Method.GET }, {});
 	cacheManager.set({ url: "/hello", method: Method.POST }, { greeting: "holla" });
 
-	assert.equal(5, cacheManager.usedSpace());
+	assert.equal(366, cacheManager.usedSpace());
 	cacheManager.remove("key2");
 	cacheManager.remove({ url: "/hello/world", method: Method.GET });
-	assert.equal(4, cacheManager.usedSpace());
+	assert.equal(299, cacheManager.usedSpace());
 	cacheManager.remove("key3");
 	cacheManager.remove({ url: "/hello", method: Method.GET });
-	assert.equal(2, cacheManager.usedSpace());
+	assert.equal(299, cacheManager.usedSpace());
 
 	cacheManager.clear();
-	assert.equal(0, cacheManager.usedSpace());
+	assert.equal(true, cacheManager.usedSpace() < 300);
 });
 
-it('validate MapCacheManager encryption', () => {
-	const cacheManager = new MapCacheManager({ encryptor: LzEncryptor });
+it('validate CookieCacheManager encryption', () => {
+	const bucket = Mocks.mockDocumentCookie();
+	const cacheManager = new CookieCacheManager({ bucket, encryptor: Base64Encryptor });
 
 	cacheManager.set("key1", "hello one");
 	cacheManager.set({ url: "/hello" }, "hello url");
@@ -139,7 +147,7 @@ it('validate MapCacheManager encryption', () => {
 	cacheManager.set({ url: "/hello", method: Method.POST }, { greeting: "holla" });
 	cacheManager.set({ url: "/hello", method: Method.POST }, { greeting: "yahoo" });
 
-	assert.equal(4, cacheManager.usedSpace());
+	assert.equal(395, cacheManager.usedSpace());
 	assert.equal("hello one", cacheManager.getValue("key1"));
 	assert.equal("hello url", cacheManager.getValue({ url: "/hello" }));
 	assert.deepEqual({}, cacheManager.getValue({ url: "/hello", method: Method.GET }));
@@ -147,17 +155,18 @@ it('validate MapCacheManager encryption', () => {
 	assert.notDeepEqual({ greeting: "holla" }, cacheManager.getValue({ url: "/hello", method: Method.POST }));
 });
 
-it('validate MapCacheManager encryption with key encryption', () => {
-	const cacheManager1 = new MapCacheManager({ encryptor: LzEncryptor });
-	const cacheManager2 = new MapCacheManager({ encryptor: LzEncryptor, encryptKey: true });
+it('validate CookieCacheManager key encrypted with encryption', () => {
+	const bucket = Mocks.mockDocumentCookie();
+	const cacheManager1 = new CookieCacheManager({ bucket, encryptor: Base64Encryptor });
+	const cacheManager2 = new CookieCacheManager({ bucket, encryptor: Base64Encryptor, encryptKey: true });
 
 	cacheManager1.set("key1", "hello one");
 	cacheManager2.set("key1", "hello one");
 	cacheManager1.set({ url: "/hello", method: Method.POST }, { greeting: "yahoo" });
 	cacheManager2.set({ url: "/hello", method: Method.POST }, { greeting: "yahoo" });
 
-	assert.equal(2, cacheManager1.usedSpace());
-	assert.equal(2, cacheManager2.usedSpace());
+	assert.equal(203, cacheManager1.usedSpace());
+	assert.equal(216, cacheManager2.usedSpace());
 	assert.equal(true, cacheManager1.has("key1"));
 	assert.equal(true, cacheManager2.has("key1"));
 	assert.equal("hello one", cacheManager1.getValue("key1"));

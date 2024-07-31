@@ -24,6 +24,7 @@ import {
 import {
     CacheManager,
     MapCacheManager,
+    CookieCacheManager,
     StorageCacheManager,
     LocalStorageCacheManager,
     SessionStorageCacheManager,
@@ -53,6 +54,7 @@ export class Ffs implements IHttp {
     RequestProcessor = RequestProcessor;
     ResponseProcessor = ResponseProcessor;
     MissingCacheError = MissingCacheError;
+    CookieCacheManager = CookieCacheManager;
     StorageCacheManager = StorageCacheManager;
     CompressionProcessor = CompressionProcessor;
     transformRequestData = transformRequestData;

@@ -128,7 +128,9 @@ export class Http implements IHttp {
         if (!config.refreshCache) {
             config.interceptor?.registerPreRequest((config?: HttpConfig) => {
                 const cached = config?.cache?.get(config);
-                if (!cached || (config?.cacheLifetime && cached?.date && (cached.date.getTime() - (new Date()).getTime()) >= config?.cacheLifetime)) {
+                console.log("THE DATE", cached?.date?.getTime(), ((new Date()).getTime() - (cached?.date?.getTime() ?? 0)), config?.cacheLifetime);
+                if (!cached || (config?.cacheLifetime && cached?.date && ((new Date()).getTime() - cached.date.getTime()) >= config?.cacheLifetime)) {
+                    if (cached && !config?.persistCache) config?.cache?.remove(config);
                     return;
                 }
                 return {

@@ -33,23 +33,23 @@ export interface Response {
 
 }
 
-export function textResponseTransformer(data: Stream | any[]| string) {
+export function textResponseTransformer(data: Stream | any[] | string) {
     return { data };
 }
 
-export function jsonResponseTransformer(data: Stream | any[]| string) {
+export function jsonResponseTransformer(data: Stream | any[] | string) {
     return { data: JSON.parse(data as string), };
 }
 
-export function streamResponseTransformer(data: Stream | any[]| string) {
+export function streamResponseTransformer(data: Stream | any[] | string) {
     return { data };
 }
 
-export function bufferResponseTransformer(data: Stream | any[]| string) {
+export function bufferResponseTransformer(data: Stream | any[] | string) {
     return { data: Buffer.from(data as any[]), };
 }
 
-export function arrayBufferResponseTransformer(data: Stream | any[]| string) {
+export function arrayBufferResponseTransformer(data: Stream | any[] | string) {
     return { data };
 }
 

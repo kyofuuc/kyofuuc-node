@@ -4,29 +4,35 @@ import { Utils, Defaults } from "../helper";
 import { NoSufficientCacheSpaceLeftError } from "../exception";
 import { CacheManager, CacheManagerOption } from "./CacheManager";
 
-export type StorageCacheManagerOption<T1 = any, T2 = any> = {
-    bucket?: Storage;
+export type CookieCacheManagerOption<T1 = any, T2 = any> = {
+    bucket?: { cookie: string; };
 } & CacheManagerOption<T1, T2>;
 
-export class StorageCacheManager<T> implements CacheManager<T> {
+export class CookieCacheManager<T> implements CacheManager<T> {
 
     private _usedSpace: number;
     private _availableSpace: number;
-    private _options: StorageCacheManagerOption;
+    private _options: CookieCacheManagerOption;
+    protected static instance: CookieCacheManager<any>;
 
-    constructor(bucket: Storage, options?: StorageCacheManagerOption) {
+    constructor(options?: CookieCacheManagerOption) {
         this._options = {
+            bucket: options?.bucket ?? document,
             ...(options ?? {}),
-            bucket,
         };
-        this._usedSpace = Utils.storageSpaceUsed(this._options.bucket);
-        this._availableSpace = Math.max(Defaults.MaxStorageSpace - this._usedSpace, 0);
+        this._usedSpace = Utils.cookieSpaceUsed(this._options.bucket);
+        this._availableSpace = Math.max(Defaults.MaxCookieLength - this._usedSpace, 0);
 
         this.get = this.get.bind(this);
         this.set = this.set.bind(this);
         this.has = this.has.bind(this);
         this.clear = this.clear.bind(this);
         this._resolve = this._resolve.bind(this);
+    }
+
+    static getInstance(options?: CookieCacheManagerOption) {
+        if (!CookieCacheManager.instance) CookieCacheManager.instance = new CookieCacheManager(options);
+        return CookieCacheManager.instance;
     }
 
     usedSpace(): number {
@@ -39,11 +45,8 @@ export class StorageCacheManager<T> implements CacheManager<T> {
 
     calculateSpace(configOrKey: string | HttpConfig, value: T): number {
         const resolve = this._resolve(configOrKey);
-        const entryStr = Utils.safeStringify({
-            value,
-            date: new Date(),
-        });
-        return (resolve.key.length + ((this._options.encryptor ? this._options.encryptor.encrypt(entryStr) : entryStr) + `#_kce_`).length);
+        const entryStr = Utils.safeStringify({ value, date: new Date() });
+        return (resolve.key.length + ((this._options.encryptor ? this._options.encryptor.encrypt(entryStr) : entryStr) + `#_kce_`).length + 2);
     }
 
     has(configOrKey: string | HttpConfig): boolean {
@@ -53,8 +56,8 @@ export class StorageCacheManager<T> implements CacheManager<T> {
     get(configOrKey: string | HttpConfig): { date: Date; value: T; } | undefined {
         const resolve = this._resolve(configOrKey);
         if (!resolve.exists) return undefined;
-        const dirtyValue = this._options.bucket.getItem(resolve.key);
-        const value = dirtyValue.substring(0, dirtyValue.lastIndexOf("#"));
+        const dirtyValue = Utils.getCookie(this._options.bucket, resolve.key);
+        const value = dirtyValue!.substring(0, dirtyValue!.lastIndexOf("#"));
         const parsed = JSON.parse(this._options.encryptor ? this._options.encryptor.decrypt(value) : value);
         return {
             value: parsed.value,
@@ -67,18 +70,19 @@ export class StorageCacheManager<T> implements CacheManager<T> {
     }
 
     set(configOrKey: string | HttpConfig, value: T): void {
-        const resolve = this._resolve(configOrKey);
-        const entryStr = Utils.safeStringify({
-            value,
-            date: new Date(),
-        });
-        const finalValue = (this._options.encryptor ? this._options.encryptor.encrypt(entryStr) : entryStr) + `#_kce_`;
-        const spaceAllocated = finalValue.length;
+        const spaceAllocated = this.calculateSpace(configOrKey, value);
         if (spaceAllocated > this.availableSpace()) {
             throw new NoSufficientCacheSpaceLeftError();
         }
+        const resolve = this._resolve(configOrKey);
+        const entryStr = Utils.safeStringify({ value, date: new Date(), });
+        const finalValue = (this._options.encryptor ? this._options.encryptor.encrypt(entryStr) : entryStr) + `#_kce_`;
         if (resolve.exists) this.remove(resolve.key);
-        this._options.bucket.setItem(resolve.key, finalValue);
+        Utils.addCookie(this._options.bucket, {
+            name: resolve.key,
+            value: finalValue,
+            expires: new Date("Tue, 30 Jul 9024 10:18:20 GMT"),
+        });
         this._usedSpace += spaceAllocated;
         this._availableSpace -= spaceAllocated;
     }
@@ -86,15 +90,15 @@ export class StorageCacheManager<T> implements CacheManager<T> {
     remove(configOrKey: string | HttpConfig): void {
         const resolve = this._resolve(configOrKey);
         if (!resolve.exists) return;
-        const spaceToFree = this._options.bucket.getItem(resolve.key).length;
+        const spaceToFree = this.calculateSpace(resolve.key, this.getValue(configOrKey) as any);
         this._usedSpace -= spaceToFree;
         this._availableSpace += spaceToFree;
-        this._options.bucket.removeItem(resolve.key);
+        Utils.removeCookie(this._options.bucket, resolve.key);
     }
 
     clear(): void {
         const keys: string[] = [];
-        Utils.getStorageEntries(this._options.bucket, (key: string, value: any) => {
+        Utils.getCookieEntries(this._options.bucket, (key: string, value: any) => {
             if (`${value}`.endsWith(`#_kce_`)) keys.push(key);
         });
         for (const key of keys) this.remove(key);
@@ -102,7 +106,7 @@ export class StorageCacheManager<T> implements CacheManager<T> {
 
     find(cond: (key: string) => boolean) {
         const found: string[] = [];
-        Utils.getStorageEntries(this._options.bucket, (key: string, _: any) => {
+        Utils.getCookieEntries(this._options.bucket, (key: string, _: any) => {
             if (cond(key)) found.push(key);
         });
         return found;
@@ -111,7 +115,7 @@ export class StorageCacheManager<T> implements CacheManager<T> {
     private _resolve(configOrKey: string | HttpConfig): { exists: boolean; key: string; } {
         let key = ((typeof configOrKey === "string") ? configOrKey : Utils.buildCacheKey(configOrKey));
         key = (this._options.encryptKey && this._options.encryptor ? this._options.encryptor.encrypt(key) : key);
-        const exists = key in this._options.bucket;
+        const exists = this._options.bucket.cookie.includes(`${key}=`);
         return { key, exists };
     }
 

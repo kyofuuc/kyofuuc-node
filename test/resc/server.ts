@@ -33,11 +33,11 @@ app.get('/headers', (req: any, res: any) => {
 	res.set('Cache-Control', 'max-age=0');
 	res.set('host', req.hostname);
 	res.set('url', req.url);
-	res.send(JSON.stringify(res.getHeaders()));
+	res.end(JSON.stringify(res.getHeaders()));
 });
 
 app.get('/redirect/:status/:next_status_code', (req: any, res: any) => {
-	res.status(req.params.status);
+	res.status(parseInt(req.params.status));
 	const proxyHost = req.headers["x-forwarded-host"];
 	const host = proxyHost ? proxyHost : req.headers.host;
 	if (req.params.status == 302 && req.params.next_status_code == 200) {

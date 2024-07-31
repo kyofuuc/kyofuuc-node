@@ -25,8 +25,8 @@ export class MapCacheManager<T> implements CacheManager<T> {
         this.get = this.get.bind(this);
         this.set = this.set.bind(this);
         this.has = this.has.bind(this);
-        this._has = this._has.bind(this);
         this.clear = this.clear.bind(this);
+        this._resolve = this._resolve.bind(this);
     }
 
     static getInstance(options?: MapCacheManagerOption) {
@@ -42,23 +42,16 @@ export class MapCacheManager<T> implements CacheManager<T> {
         return this._options.maxEntries! - this._entriesCount;
     }
 
-    calculateSpace(_: T): number {
+    calculateSpace(_: string | HttpConfig, __: T): number {
         return 1;
     }
 
-    _has(configOrKey: string | HttpConfig): { exists: boolean; key: string; } {
-        let key = ((typeof configOrKey === "string") ? configOrKey : Utils.buildCacheKey(configOrKey));
-        key = (this._options.encryptKey && this._options.encryptor ? this._options.encryptor.encrypt(key) : key);
-        const exists = key in this._options.bucket;
-        return { key, exists };
-    }
-
     has(configOrKey: string | HttpConfig): boolean {
-        return this._has(configOrKey).exists;
+        return this._resolve(configOrKey).exists;
     }
 
     get(configOrKey: string | HttpConfig): { date: Date; value: T; } | undefined {
-        const resolve = this._has(configOrKey);
+        const resolve = this._resolve(configOrKey);
         if (!resolve.exists) return undefined;
         const value = this._options.bucket[resolve.key];
         const parsed = JSON.parse(this._options.encryptor ? this._options.encryptor.decrypt(value) : value);
@@ -73,10 +66,10 @@ export class MapCacheManager<T> implements CacheManager<T> {
     }
 
     set(configOrKey: string | HttpConfig, value: T): void {
-        if (this.calculateSpace(value) > this.availableSpace()) {
+        if (this.calculateSpace(configOrKey, value) > this.availableSpace()) {
             throw new NoSufficientCacheSpaceLeftError();
         }
-        const resolve = this._has(configOrKey);
+        const resolve = this._resolve(configOrKey);
         const entryStr = Utils.safeStringify({
             value,
             date: new Date(),
@@ -86,7 +79,7 @@ export class MapCacheManager<T> implements CacheManager<T> {
     }
 
     remove(configOrKey: string | HttpConfig): void {
-        const resolve = this._has(configOrKey);
+        const resolve = this._resolve(configOrKey);
         if (!resolve.exists) return;
         delete this._options.bucket[resolve.key];
         this._entriesCount--;
@@ -103,6 +96,13 @@ export class MapCacheManager<T> implements CacheManager<T> {
             if (cond(key)) found.push(key);
         }
         return found;
+    }
+
+    private _resolve(configOrKey: string | HttpConfig): { exists: boolean; key: string; } {
+        let key = ((typeof configOrKey === "string") ? configOrKey : Utils.buildCacheKey(configOrKey));
+        key = (this._options.encryptKey && this._options.encryptor ? this._options.encryptor.encrypt(key) : key);
+        const exists = key in this._options.bucket;
+        return { key, exists };
     }
 
 }
