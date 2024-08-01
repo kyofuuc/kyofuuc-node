@@ -1,5 +1,4 @@
 
-
 module.exports = {
     WebSocket,
     http: null,
@@ -7,3 +6,4 @@ module.exports = {
     XMLHttpRequest,
 };
 
+export default module.exports

@@ -17,7 +17,9 @@ function generateHttpConfig(name) {
     resolve: {
       extensions: ['.ts', '.js'],
       fallback: {
-        zlib: false
+        zlib: false,
+        http: false,
+        https: false,
       },
     },
     output: {
@@ -25,8 +27,8 @@ function generateHttpConfig(name) {
       globalObject: 'this',
       libraryTarget: 'umd',
       filename: name + '.js',
-      path: __dirname + '/dist/',
       sourceMapFilename: name + '.map',
+      path: __dirname + '/browser_dist/',
     },
     node: false,
     devtool: 'source-map',

@@ -2,7 +2,7 @@
 import zlib from "zlib";
 import { Stream } from "stream";
 import { KyofuucObject } from "../helper";
-import { UnregisteredCompressionTypeError } from "../exception/UnregisteredCompressionTypeError";
+import { UnexpectedError, UnregisteredCompressionTypeError } from "../exception";
 
 
 export const CompressionType = {
@@ -50,7 +50,7 @@ export const CompressionProcessor = {
     _RegisteredDecompressTransformers: {} as KyofuucObject<CompressionTransformer>,
 
     register(type: string, flow: Flow, transformer: CompressionTransformer) {
-        type = type.toUpperCase();
+        type = type?.toUpperCase();
         if (flow === "compress") {
             CompressionProcessor._RegisteredCompressTransformers[type] = transformer;
             return;
@@ -59,7 +59,7 @@ export const CompressionProcessor = {
     },
 
     unregister(type: string, flow: Flow) {
-        type = type.toUpperCase();
+        type = type?.toUpperCase();
         if (flow === "compress") {
             if (!(type in CompressionProcessor._RegisteredCompressTransformers)) return;
             delete CompressionProcessor._RegisteredCompressTransformers[type];
@@ -70,17 +70,25 @@ export const CompressionProcessor = {
     },
 
     transform(type: string, flow: Flow) {
-        type = type.toUpperCase();
+        type = type?.toUpperCase();
         if (flow === "compress") {
             if (!(type in CompressionProcessor._RegisteredCompressTransformers)) {
                 throw new UnregisteredCompressionTypeError(type, flow);
             }
-            return CompressionProcessor._RegisteredCompressTransformers[type]();
+            const transformer = CompressionProcessor._RegisteredCompressTransformers[type];
+            if (!transformer) {
+                throw new UnexpectedError(`The compression compress type '${type}' found but with invalid transformer`);
+            }
+            return transformer();
         }
         if (!(type in CompressionProcessor._RegisteredDecompressTransformers)) {
             throw new UnregisteredCompressionTypeError(type, flow);
         }
-        return CompressionProcessor._RegisteredDecompressTransformers[type]();
+        const transformer = CompressionProcessor._RegisteredDecompressTransformers[type];
+        if (!transformer) {
+            throw new UnexpectedError(`The compression decompress type '${type}' found but with invalid transformer`);
+        }
+        return transformer();
     },
 
 }

@@ -16,8 +16,10 @@ export type EventQueuePreExecutor = (cache: CacheManager<any>, ...params: any) =
 
 export interface Event {
 
+    date?: Date;
     type: string;
     params: any[];
+    retryIn?: number;
     subscriptionKey?: string;
 
 }
@@ -29,21 +31,23 @@ export interface IEventQueue {
     subscribe(key: string, subscription: Subscription): void;
     queueEvent(cache: CacheManager<any>, event: Event): string;
     unSubscribe(key: string, subscription: Subscription): void;
-    execute(cache: CacheManager<any>, type: string): Promise<any[]>;
-    executeOnly(cache: CacheManager<any>, id: string): Promise<any>;
+    execute(cache: CacheManager<any>, type?: string): Promise<any[]>;
     queue(cache: CacheManager<any>, type: string, ...params: any[]): string;
+    executeOnly(cache: CacheManager<any>, id: string, type?: string): Promise<any>;
 
 }
 
 export class EventQueue implements IEventQueue {
 
     protected static instance: EventQueue;
+    private _ScheduledExecutions: string[];
     private _Subscriptions: KyofuucObject<Subscription[]>;
     private static _RegisteredExecutors: KyofuucObject<EventQueueExecutor> = {};
     private static _RegisteredPreExecutors: KyofuucObject<EventQueuePreExecutor> = {};
 
     constructor() {
         this._Subscriptions = {};
+        this._ScheduledExecutions = [];
     }
 
     static getInstance() {
@@ -75,6 +79,9 @@ export class EventQueue implements IEventQueue {
 
     queueEvent(cache: CacheManager<any>, event: Event, key?: string): string {
         const id = this._generateId(key);
+        if (event.retryIn && !event.date) {
+            event.date = new Date();
+        }
         cache.set(this._buildId(id), event);
         return id;
     }
@@ -83,10 +90,28 @@ export class EventQueue implements IEventQueue {
         return this.queueEvent(cache, { type, params });
     }
 
-    async executeOnly(cache: CacheManager<any>, id: string) {
+    async executeOnly(cache: CacheManager<any>, id: string, type?: string) {
         const event = cache.getValue(this._buildId(id)) as Event;
         if (event === undefined) {
             throw new NoEventFoundWithIdError(id);
+        }
+        if (type && event.type !== type) return;
+        if (event.date && event.retryIn) {
+            if (this._ScheduledExecutions.includes(id)) {
+                return "___KF_ALREADY_SCHEDULED_FOR_TIMED_EXECUTION___";
+            }
+            if (typeof event.date === "string") {
+                event.date = new Date(event.date);
+            }
+            event.date = Utils.addMsToDate(event.date, event.retryIn);
+            const executionTimeMs = Utils.dateDiffInMs(new Date(), event.date);
+            if (executionTimeMs > 0) {
+                this._ScheduledExecutions.push(id);
+                setTimeout((() => {
+                    this.executeOnly(cache, id, type);
+                }).bind(this), executionTimeMs);
+                return "___KF_SCHEDULED_FOR_TIMED_EXECUTION___";
+            }
         }
         cache.remove(this._buildId(id));
         const params = (event.type in EventQueue._RegisteredPreExecutors ? EventQueue._RegisteredPreExecutors[event.type](cache, ...event.params) : event.params);
@@ -95,11 +120,13 @@ export class EventQueue implements IEventQueue {
         return result;
     }
 
-    async execute(cache: CacheManager<any>, type: string) {
+    async execute(cache: CacheManager<any>, type?: string) {
         const results: any[] = [];
         const keys = cache.find((key) => key.startsWith(`KQ__`));
         for (const key of keys) {
-            results.push(await this.executeOnly(cache, key.replace(`KQ__`, "")));
+            const result = await this.executeOnly(cache, key.replace(`KQ__`, ""), type);
+            if (result === "___KF_ALREADY_SCHEDULED_FOR_TIMED_EXECUTION___") continue;
+            results.push(result);
         }
         return results;
     }

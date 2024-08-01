@@ -2,7 +2,7 @@
 import { Stream } from "stream";
 import { Config, HttpConfig } from "./Config";
 import { ErrorCode, KyofuucObject, Utils } from "../helper";
-import { UnregisteredResponseTypeError } from "../exception";
+import { UnexpectedError, UnregisteredResponseTypeError } from "../exception";
 
 export const ResponseType = {
 
@@ -62,17 +62,21 @@ export const ResponseProcessor = {
     },
 
     unregister(type: string) {
-        type = type.toUpperCase();
+        type = type?.toUpperCase();
         if (!(type in ResponseProcessor._RegisteredTransformers)) return;
         delete ResponseProcessor._RegisteredTransformers[type];
     },
 
     transform(type: string, data: any) {
-        type = type.toUpperCase();
+        type = type?.toUpperCase();
         if (!(type in ResponseProcessor._RegisteredTransformers)) {
             throw new UnregisteredResponseTypeError(type);
         }
-        return ResponseProcessor._RegisteredTransformers[type](data);
+        const transformer = ResponseProcessor._RegisteredTransformers[type];
+        if (!transformer) {
+            throw new UnexpectedError(`The response type '${type}' found but with invalid transformer`);
+        }
+        return transformer(data);
     },
 
 }

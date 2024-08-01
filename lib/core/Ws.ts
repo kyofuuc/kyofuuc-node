@@ -237,7 +237,7 @@ export class Ws implements IWs {
     }
 
     private _registerInterceptors() {
-        if (this._config!.protocol === "text") {
+        if (!this._config!.protocol || this._config!.protocol === "text") {
             this._config!.requestType = RequestType.TEXT;
             this._config!.responseType = RequestType.TEXT;
         } else if (this._config!.protocol === "json") {

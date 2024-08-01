@@ -2,7 +2,7 @@
 import { Stream } from "stream";
 import { Config } from "./Config";
 import { ErrorCode, KyofuucObject, Utils } from "../helper";
-import { UnregisteredRequestTypeError } from "../exception";
+import { UnexpectedError, UnregisteredRequestTypeError } from "../exception";
 
 export const RequestType = {
 
@@ -80,17 +80,21 @@ export const RequestProcessor = {
     },
 
     unregister(type: string) {
-        type = type.toUpperCase();
+        type = type?.toUpperCase();
         if (!(type in RequestProcessor._RegisteredTransformers)) return;
         delete RequestProcessor._RegisteredTransformers[type];
     },
 
     transform(type: string, data: any) {
-        type = type.toUpperCase();
+        type = type?.toUpperCase();
         if (!(type in RequestProcessor._RegisteredTransformers)) {
             throw new UnregisteredRequestTypeError(type);
         }
-        return RequestProcessor._RegisteredTransformers[type](data);
+        const transformer = RequestProcessor._RegisteredTransformers[type];
+        if (!transformer) {
+            throw new UnexpectedError(`The request type '${type}' found but with invalid transformer`);
+        }
+        return transformer(data);
     },
 
 }

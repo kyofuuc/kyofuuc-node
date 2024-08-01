@@ -1,5 +1,4 @@
 
-
 module.exports = {
     http: require("http"),
     https: require("https"),
@@ -7,3 +6,4 @@ module.exports = {
     XMLHttpRequest: require("xmlhttprequest").XMLHttpRequest,
 };
 
+export default module.exports

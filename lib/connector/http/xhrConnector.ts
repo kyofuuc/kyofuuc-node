@@ -214,7 +214,7 @@ export default function xhrConnector(config: HttpConfig, queueRequest?: QueueReq
                     Utils.resolveResponse(response, resolve, reject);
                     return;
                 }
-                onLoadEnd((res: Response) => reject(Utils.kyofuucError(res.body ?? "Network error", config, ErrorCode.REQUEST_ERROR, req, res)));
+                onLoadEnd((res: Response) => reject(Utils.kyofuucError((res.body ? res.body : "Network error"), config, ErrorCode.REQUEST_ERROR, req, res)));
             };
             req.onabort = () => {
                 if (rejected || manuallyAborted) return;

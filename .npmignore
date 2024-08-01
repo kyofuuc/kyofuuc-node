@@ -1,7 +1,10 @@
+browser_dist/
+build/
 test/
 docs/
-build/
+lib/
 logs
+*DS_Store
 *DS_Store
 *.zip
 *.tgz
@@ -9,4 +12,5 @@ logs
 .cache
 *.log
 *.log*
-out.txt
+.mocharc.json
+tsconfig.json

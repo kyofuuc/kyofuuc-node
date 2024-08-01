@@ -1,18 +1,22 @@
 {
   "name": "kyofuuc",
   "version": "0.0.3",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "description": "Simple yet powerful HTTP, WS client with cache and offline support for Typescript + Javascript. For both browser and Node.",
-  "main": "index.ts",
   "browser": {
-    "./lib/helper/node_classes.js": "./lib/helper/browser_classes.js",
+    "./lib/helper/node_classes.ts": "./lib/helper/browser_classes.ts",
     "./lib/connector/http/httpConnector.js": "./lib/connector/http/xhrConnector.js"
   },
-  "jsdelivr": "dist/kyofuuc.min.js",
-  "unpkg": "dist/kyofuuc.min.js",
+  "jsdelivr": "browser_dist/kyofuuc.min.js",
+  "unpkg": "browser_dist/kyofuuc.min.js",
   "scripts": {
-    "build": "webpack",
-    "pack": "npm run build & npm pack",
+    "build:browser": "webpack",
+    "build:ts": "tsc && node post_build.js",
     "update": "npx -y npm-check-updates -u",
+    "clean": "rm -Rf dist; rm -Rf browser_dist",
+    "pack": "npm run clean && npm run build && npm pack",
+    "build": "npm run build:browser && npm run build:ts ",
     "test": "mocha --timeout 20000 --require ts-node/register "
   },
   "repository": {

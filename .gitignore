@@ -106,3 +106,17 @@ dist
 
 .DS_Store
 .vscode*
+
+browser_dist/
+test/
+docs/
+build/
+logs
+*DS_Store
+*.zip
+*.tgz
+*.tar
+.cache
+*.log
+*.log*
+out.txt

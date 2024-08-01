@@ -2,7 +2,7 @@
 
 <head>
 	<title>KyofuucHttp Crash Test</title>
-	<script src="../../dist/kyofuuc.min.js"></script>
+	<script src="../../browser_dist/kyofuuc.min.js"></script>
 </head>
 
 <body>
@@ -72,6 +72,9 @@
 
 	function testWs() {
 		const ws = ffs.ws("wss://echo.websocket.org");
+		ws.onError((_, e) => {
+			console.error("WS.ERROR:", e);
+		});
 		ws.onOpen((_, __) => {
 			console.log("WS.OPEN: Connected to WS successful");
 		});

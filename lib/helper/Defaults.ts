@@ -5,7 +5,7 @@ import { HttpConfig, Method, WsConfig } from "../types";
 
 export const Defaults = {
 
-    VERSION: "0.0.4",
+    VERSION: "0.0.3",
     MaxObjectEntrySize: 999999,
     MaxCookieLength: 3800, // 3800 Bytes
     MaxStorageSpace: 5120000, // 5000 * 1024 = 5MB

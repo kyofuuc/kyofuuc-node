@@ -4,7 +4,8 @@ import xhrConnector from "./connector/http/xhrConnector";
 import httpConnector from "./connector/http/httpConnector";
 import {
     Utils,
-    Defaults
+    Defaults,
+    KyofuucObject,
 } from "./helper";
 import {
     Method,
@@ -49,12 +50,12 @@ import {
     UnregisteredResponseTypeError,
     NoSufficientCacheSpaceLeftError,
 } from "./exception";
-import { KyofuucObject } from "./helper";
 
 
 export class Ffs implements IHttp, IWs {
 
     Ws = Ws;
+    Ffs = Ffs;
     Http = Http;
     Utils = Utils;
     Method = Method;
@@ -99,6 +100,10 @@ export class Ffs implements IHttp, IWs {
 
     static init(config?: HttpConfig | WsConfig) {
         return new Ffs(config);
+    }
+
+    init(config?: HttpConfig | WsConfig) {
+        return Ffs.init(config);
     }
 
     // http
@@ -214,6 +219,14 @@ export class Ffs implements IHttp, IWs {
     }
 
 }
+
+export * from "./core";
+export * from "./types";
+export * from "./helper";
+export * from "./exception";
+export * from "./cachemanager";
+export * from "./connector/http/xhrConnector";
+export * from "./connector/http/httpConnector";
 
 export const ffs = new Ffs();
 
