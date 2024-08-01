@@ -1,5 +1,5 @@
 
-import { HttpConfig } from "../types";
+import { Config } from "../types";
 import { KyofuucObject, Utils } from "../helper";
 
 export enum HandlerType {
@@ -16,20 +16,20 @@ export enum HandlerType {
     HTTP_REQUEST_MAXIMUM_REDIRECTS_REACHED = "HTTP_REQUEST_MAXIMUM_REDIRECTS_REACHED",
 }
 
-export type HandlerCallback = (config?: HttpConfig, options?: KyofuucObject<any>, response?: any) => KyofuucObject<any> | void;
+export type HandlerCallback = (config?: Config, options?: KyofuucObject<any>, response?: any) => KyofuucObject<any> | void;
 
 export interface Handler {
     type: HandlerType;
     cb: HandlerCallback;
     options?: KyofuucObject<any>;
-    when?: (config?: HttpConfig) => boolean;
+    when?: (config?: Config) => boolean;
 }
 
 export class Interceptor {
 
-    _count: number;
-    _handlers: KyofuucObject<KyofuucObject<Handler>>;
-    _reverse_handler_type_map: KyofuucObject<string>;
+    private _count: number;
+    private _handlers: KyofuucObject<KyofuucObject<Handler>>;
+    private _reverse_handler_type_map: KyofuucObject<string>;
 
     constructor(interceptors?: Interceptor[]) {
         this._count = 0;
@@ -73,9 +73,11 @@ export class Interceptor {
     registers(interceptors: Interceptor[]): string[] {
         const keys: string[] = [];
         Utils.forEach(interceptors, (_: string, interceptor: Interceptor) => {
-            Utils.forEach(interceptor._handlers, (_: string, value: Handler) => {
-                keys.push(this.register(value));
-            })
+            Utils.forEach(interceptor._handlers, (_: string, valueMap: KyofuucObject<Handler>) => {
+                Utils.forEach(valueMap, (__: string, value: Handler) => {
+                    keys.push(this.register(value));
+                });
+            });
         });
         return keys;
     }
@@ -90,7 +92,7 @@ export class Interceptor {
         return Object.values(this._handlers[`${type}`] ?? {});
     }
 
-    invoke(type: HandlerType, config?: HttpConfig, response?: any): KyofuucObject<any>[] {
+    invoke(type: HandlerType, config?: Config, response?: any): KyofuucObject<any>[] {
         const results: KyofuucObject<any>[] = [];
         const handlers = Object.values(this._handlers[`${type}`] ?? {});
 

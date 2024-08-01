@@ -63,10 +63,20 @@
 	}
 
 	function httpGetRequest() {
-		ffs.get("https://api.plos.org/search?q=title:DNA", { cacheLifetime: (1000 * 60), cache: ffs.LocalStorageCacheManager.getInstance() }).then(response => {
+		ffs.get("https://api.plos.org/search?q=title:DNA", { cacheLifetime: (1000 * 60 * 5), cache: ffs.LocalStorageCacheManager.getInstance() }).then(response => {
 			console.log(response);
 		}).catch(error => {
 			console.error(error);
+		});
+	}
+
+	function testWs() {
+		const ws = ffs.ws("wss://echo.websocket.org");
+		ws.onOpen((_, __) => {
+			console.log("WS.OPEN: Connected to WS successful");
+		});
+		ws.onMessage((_, __, message) => {
+			console.log("WS.MSG:", message);
 		});
 	}
 
@@ -80,8 +90,7 @@
 	console.log("START TEST HTTP REQUEST");
 	httpGetRequest();
 	console.log("END TEST HTTP REQUEST");
-
-	/*const ws = ffs.ws("wss://echo.websocket.org");*/
+	testWs();
 
 </script>
 

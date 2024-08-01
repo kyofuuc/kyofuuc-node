@@ -1,12 +1,26 @@
 
-import { Method } from "./Method";
 import { Interceptor } from "../core";
 import { KyofuucObject } from "../helper";
 import { CacheManager } from "../cachemanager";
 
+export interface WsConnection {
+
+    url?: string;
+    name: string;
+    close(): void;
+    protocol?: string;
+    readyState?: number;
+    binaryType?: string;
+    bufferedAmount?: number;
+    send(message: any): void;
+    addEventListener(evt: string, cb: Function): void;
+
+}
+
 export type QueueRequest = (config: Config) => void;
+export type WsConnector = (config: WsConfig) => WsConnection;
 export type QuerySerializer = (query: KyofuucObject<any>) => string;
-export type Connector = (config: Config, retryRequest?: QueueRequest) => Promise<any>;
+export type HttpConnector = (config: Config, retryRequest?: QueueRequest) => Promise<any>;
 
 export interface BasicAuth {
 
@@ -23,6 +37,9 @@ export interface Config {
     transport?: any;
     auth?: BasicAuth;
     baseUrl?: string;
+    requestType?: string;
+    responseType?: string;
+    interceptor?: Interceptor;
     querySerializer?: QuerySerializer;
     query?: KyofuucObject<any> | URLSearchParams;
 
@@ -43,20 +60,17 @@ export type HttpConfig = {
     retryCount?: number;
     socketPath?: string;
     decompress?: boolean;
-    requestType?: string;
     isResource?: boolean;
     maxRedirects?: number;
-    connector?: Connector;
-    responseType?: string;
     refreshCache?: boolean;
     cacheLifetime?: number;
     persistCache?: boolean;
     subscriptionKey?: string;
     socketKeepAlive?: number;
     insecureHTTPParser?: any;
+    connector?: HttpConnector;
     maxContentLength?: number;
     withCredentials?: boolean;
-    interceptor?: Interceptor;
     cache?: CacheManager<any>;
     responseEncoding?: string;
     storeRedirectsResponses?: boolean;
@@ -74,5 +88,11 @@ export type HttpConfig = {
 
 export type WsConfig = {
 
-} & Config;
+    protocol?: string;
+    reconnect?: boolean;
+    maxReconnect?: number;
+    connector?: WsConnector;
+    reconnectInterval?: number;
+    reconnectIntervalByPower?: boolean;
 
+} & Config;

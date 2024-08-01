@@ -1,15 +1,14 @@
 
-import { Response } from "../types";
 import { Interceptor } from "./Interceptor";
-import { HttpConfig, Method } from "../types";
 import { EventQueue, EventQueueType } from "./EventQueue";
 import { Defaults, KyofuucObject, Utils } from "../helper";
+import { Config, Response, HttpConfig, Method } from "../types";
 import { InvalidParameterError, MissingCacheError } from "../exception";
 import { CacheManager, LocalStorageCacheManager, MapCacheManager, SessionStorageCacheManager } from "../cachemanager";
 
 export interface IHttp {
     
-    getUrl(config: HttpConfig): string;
+    getUrl(config: Config): string;
     queueRequest(config: HttpConfig): void;
     get(url: string, config?: HttpConfig): Promise<any>;
     head(url: string, config?: HttpConfig): Promise<any>;
@@ -41,7 +40,7 @@ export class Http implements IHttp {
         return Http.instance;
     }
 
-    getUrl(config: HttpConfig) {
+    getUrl(config: Config) {
         if (!config.url) {
             throw new InvalidParameterError("Invalid or missing url in config");
         }
@@ -128,7 +127,6 @@ export class Http implements IHttp {
         if (!config.refreshCache) {
             config.interceptor?.registerPreRequest((config?: HttpConfig) => {
                 const cached = config?.cache?.get(config);
-                console.log("THE DATE", cached?.date?.getTime(), ((new Date()).getTime() - (cached?.date?.getTime() ?? 0)), config?.cacheLifetime);
                 if (!cached || (config?.cacheLifetime && cached?.date && ((new Date()).getTime() - cached.date.getTime()) >= config?.cacheLifetime)) {
                     if (cached && !config?.persistCache) config?.cache?.remove(config);
                     return;

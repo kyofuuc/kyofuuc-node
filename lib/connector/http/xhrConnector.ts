@@ -70,8 +70,8 @@ export default function xhrConnector(config: HttpConfig, queueRequest?: QueueReq
                 return reject(Utils.kyofuucError('Request body larger than max content length limit', config, ErrorCode.REQUEST_EXCEEDS_MAXIMUM_LENGTH));
             }
 
-            if (!headerNamesMap['content-length']) {
-                headers['Content-Length'] = data.length;
+            if (headerNamesMap['content-length']) {
+                delete headers[headerNamesMap['content-length']];
             }
         }
         if (config.bearer && !headerNamesMap.authorization) {

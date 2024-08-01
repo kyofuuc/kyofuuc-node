@@ -1,6 +1,6 @@
 
 import { Stream } from "stream";
-import { HttpConfig } from "./Config";
+import { Config, HttpConfig } from "./Config";
 import { ErrorCode, KyofuucObject, Utils } from "../helper";
 import { UnregisteredResponseTypeError } from "../exception";
 
@@ -77,11 +77,11 @@ export const ResponseProcessor = {
 
 }
 
-export function transformResponseData(config: HttpConfig, response: Partial<Response>, res: any, onSuccess: (result: Response) => void, onError: (error: Error) => void) {
+export function transformResponseData(config: Config, response: Partial<Response>, res: any, onSuccess: (result: Response) => void, onError: (error: Error) => void) {
     try {
         const responseDataTransformed = ResponseProcessor.transform(config.responseType!, res);
         response.data = responseDataTransformed.data;
-        if (responseDataTransformed.contentType) {
+        if (responseDataTransformed.contentType && response.headers) {
             response.headers!['Content-Type'] = responseDataTransformed.contentType;
         }
     } catch (err: any) {

@@ -1,6 +1,6 @@
 
 import { Stream } from "stream";
-import { HttpConfig } from "./Config";
+import { Config } from "./Config";
 import { ErrorCode, KyofuucObject, Utils } from "../helper";
 import { UnregisteredRequestTypeError } from "../exception";
 
@@ -95,7 +95,7 @@ export const RequestProcessor = {
 
 }
 
-export function transformRequestData(config: HttpConfig, data: any, contentTypeNotSet: boolean, headers: KyofuucObject<any>, reject: (error: Error) => void) {
+export function transformRequestData(config: Config, data: any, contentTypeNotSet: boolean, headers: KyofuucObject<any>, reject: (error: Error) => void) {
     try {
         const requestDataTransformed = RequestProcessor.transform(config.requestType!, data);
         if (contentTypeNotSet) {
@@ -103,7 +103,7 @@ export function transformRequestData(config: HttpConfig, data: any, contentTypeN
         }
         return requestDataTransformed.buffer;
     } catch (err: any) {
-        reject(Utils.kyofuucError(err.message, config, ErrorCode.REQUEST_DATA_TRANSFORMATION_FAILED));
+        reject(Utils.kyofuucError(err.message, config as Config, ErrorCode.REQUEST_DATA_TRANSFORMATION_FAILED));
     }
 }
 

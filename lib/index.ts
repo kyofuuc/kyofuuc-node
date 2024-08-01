@@ -1,4 +1,11 @@
 
+import classes from "./helper/node_classes";
+import xhrConnector from "./connector/http/xhrConnector";
+import httpConnector from "./connector/http/httpConnector";
+import {
+    Utils,
+    Defaults
+} from "./helper";
 import {
     Method,
     WsConfig,
@@ -12,10 +19,15 @@ import {
 
     transformRequestData,
     transformResponseData,
+    WsConnection,
+    WsConnector,
 } from "./types";
 import {
+    Ws,
+    IWs,
     Http,
     IHttp,
+    WsState,
     EventQueue,
     Interceptor,
     HandlerType,
@@ -37,23 +49,36 @@ import {
     UnregisteredResponseTypeError,
     NoSufficientCacheSpaceLeftError,
 } from "./exception";
+import { KyofuucObject } from "./helper";
 
-export class Ffs implements IHttp {
 
+export class Ffs implements IHttp, IWs {
+
+    Ws = Ws;
     Http = Http;
+    Utils = Utils;
     Method = Method;
+    private _ws: IWs;
+    WsState = WsState;
+    Defaults = Defaults;
+    http = classes.http;
     private _http: IHttp;
+    https = classes.https;
     EventQueue = EventQueue;
     RequestType = RequestType;
     Interceptor = Interceptor;
     HandlerType = HandlerType;
+    xhrConnector = xhrConnector;
     ResponseType = ResponseType;
+    httpConnector = httpConnector;
+    WebSocket = classes.WebSocket;
     EventQueueType = EventQueueType;
     MapCacheManager = MapCacheManager;
     CompressionType = CompressionType;
     RequestProcessor = RequestProcessor;
     ResponseProcessor = ResponseProcessor;
     MissingCacheError = MissingCacheError;
+    XMLHttpRequest = classes.XMLHttpRequest;
     CookieCacheManager = CookieCacheManager;
     StorageCacheManager = StorageCacheManager;
     CompressionProcessor = CompressionProcessor;
@@ -68,12 +93,15 @@ export class Ffs implements IHttp {
     NoSufficientCacheSpaceLeftError = NoSufficientCacheSpaceLeftError;
 
     constructor(config?: HttpConfig | WsConfig) {
-        this._http = new Http(config); 
+        this._ws = new Ws(config as WsConfig); 
+        this._http = new Http(config as HttpConfig); 
     }
 
     static init(config?: HttpConfig | WsConfig) {
         return new Ffs(config);
     }
+
+    // http
 
     getUrl(config: HttpConfig): string {
         return this._http.getUrl(config);
@@ -117,6 +145,72 @@ export class Ffs implements IHttp {
 
     request(urlOrConfig: string | HttpConfig, config?: HttpConfig | undefined): Promise<any> {
         return this._http.request(urlOrConfig, config);
+    }
+
+    // ws
+
+    ws(config: WsConfig): IWs {
+        return Ws.ws(config);
+    }
+
+    close(): void {
+        return this._ws.close();
+    }
+
+    getState(): WsState {
+        return this._ws.getState();
+    }
+
+    getBufferedAmount(): number {
+        return this._ws.getBufferedAmount();
+    }
+
+    sendMessage(message: any): void {
+        this._ws.sendMessage(message);
+    }
+
+    getLastReconnectionCount(): number {
+        return this._ws.getLastReconnectionCount();
+    }
+
+    getBinaryType(): string | undefined {
+        return this._ws.getBinaryType();
+    }
+
+    setBinaryType(binaryType: string): void {
+        this._ws.setBinaryType(binaryType);
+    }
+
+    reconnect(connector?: WsConnector | undefined): IWs {
+        return this._ws.reconnect(connector);
+    }
+
+    getConnection(): WsConnection | undefined {
+        return this._ws.getConnection();
+    }
+
+    connect(urlOrConfig: string | WsConfig, config?: WsConfig | undefined): IWs {
+        return this._ws.connect(urlOrConfig, config);
+    }
+
+    onOpen(cb: (ws: IWs, event: any, options?: KyofuucObject<any> | undefined) => void, options?: KyofuucObject<any> | undefined): void {
+        this._ws.onOpen(cb, options);
+    }
+
+    onClose(cb: (ws: IWs, event: any, options?: KyofuucObject<any> | undefined) => void, options?: KyofuucObject<any> | undefined, always?: boolean): void {
+        this._ws.onClose(cb, options, always);
+    }
+
+    onError(cb: (ws: IWs, error: Error, options?: KyofuucObject<any> | undefined) => void, options?: KyofuucObject<any> | undefined): void {
+        this._ws.onError(cb, options);
+    }
+
+    onStateChange(cb: (ws: IWs, state: WsState, options?: KyofuucObject<any> | undefined) => void, options?: KyofuucObject<any> | undefined): void {
+        this._ws.onStateChange(cb, options);
+    }
+
+    onMessage(cb: (ws: IWs, event: any, message: any, options?: KyofuucObject<any> | undefined) => void, options?: KyofuucObject<any> | undefined): void {
+        this._ws.onMessage(cb, options);
     }
 
 }

@@ -1,7 +1,7 @@
 
 import { Utils } from "./Utils";
-import { HttpConfig, Method } from "../types";
 const classes = require("../helper/node_classes");
+import { HttpConfig, Method, WsConfig } from "../types";
 
 export const Defaults = {
 
@@ -20,10 +20,15 @@ export const Defaults = {
         return connector;
     },
 
-    /*getDefaultWSConnector() {
+    getDefaultWSConnector() {
         let connector = require('../connector/ws/wsConnector');
         return connector;
-    },*/
+    },
+
+    wsConfig(config: WsConfig) {
+        if (config.connector === undefined) config.connector = Defaults.getDefaultWSConnector();
+        return config;
+    },
 
     httpConfig(config: HttpConfig) {
         if (config.timeout === undefined) config.timeout = 5000;

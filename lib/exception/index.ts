@@ -1,5 +1,6 @@
 
 export * from "./MissingCacheError";
+export * from "./ConnectionClosedError";
 export * from "./InvalidParameterError";
 export * from "./NoEventFoundWithIdError";
 export * from "./UnregisteredRequestTypeError";
