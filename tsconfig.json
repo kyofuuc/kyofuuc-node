@@ -1,0 +1,25 @@
+{
+  "ts-node": {
+    "files": true
+  },
+  "include": [
+    "lib/**/*.ts"
+  ],
+  "compilerOptions": {
+    "strict": true,
+    "allowJs": true,
+    "sourceMap": false,
+    "target": "es2017",
+    "declaration": true,
+    "rootDir": "./lib/",
+    "outDir": "./dist/",
+    "module": "commonjs",
+    "skipLibCheck": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+  }
+}

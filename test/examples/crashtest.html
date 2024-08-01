@@ -1,0 +1,100 @@
+<html>
+
+<head>
+	<title>KyofuucHttp Crash Test</title>
+	<script src="../../browser_dist/kyofuuc.min.js"></script>
+</head>
+
+<body>
+
+</body>
+<script>
+	console.log(ffs);
+	function testCacheManager_MCM() {
+		const cacheManager = ffs.MapCacheManager.getInstance();
+
+		cacheManager.clear();
+		Array(111111).fill("hello one").forEach((e, i) => cacheManager.set(e + "-" + i, e));
+		console.log("MapCacheManager:UsedSpace:", cacheManager.usedSpace());
+		Array(111111).fill("hello two").forEach((e, i) => cacheManager.set(e + "-" + i, e));
+		console.log("MapCacheManager:UsedSpace:", cacheManager.usedSpace());
+		Array(777777).fill("hello three").forEach((e, i) => cacheManager.set(e + "-" + i, e));
+		console.log("MapCacheManager:UsedSpace:", cacheManager.usedSpace());
+		cacheManager.clear();
+	}
+
+	function testCacheManager_LSCM() {
+		const cacheManager = ffs.LocalStorageCacheManager.getInstance();
+
+		cacheManager.clear();
+		cacheManager.set("key1", Array(111111).fill("hello one"));
+		console.log("LocalStorageCacheManager:UsedSpace:", cacheManager.usedSpace());
+		cacheManager.set("key2", Array(111111).fill("hello one"));
+		console.log("LocalStorageCacheManager:UsedSpace:", cacheManager.usedSpace());
+		cacheManager.set("key3", Array(111111).fill("hello one"));
+		console.log("LocalStorageCacheManager:UsedSpace:", cacheManager.usedSpace());
+		cacheManager.clear();
+	}
+
+	function testCacheManager_SSCM() {
+		const cacheManager = ffs.SessionStorageCacheManager.getInstance();
+
+		cacheManager.clear();
+		cacheManager.set("key1", Array(111111).fill("hello one"));
+		console.log("SessionStorageCacheManager:UsedSpace:", cacheManager.usedSpace());
+		cacheManager.set("key2", Array(111111).fill("hello one"));
+		console.log("SessionStorageCacheManager:UsedSpace:", cacheManager.usedSpace());
+		cacheManager.set("key3", Array(111111).fill("hello one"));
+		console.log("SessionStorageCacheManager:UsedSpace:", cacheManager.usedSpace());
+		cacheManager.clear();
+	}
+
+	function testCookieManager_CCM() {
+		const cacheManager = ffs.CookieCacheManager.getInstance();
+
+		cacheManager.clear();
+		cacheManager.set("key1", Array(20).fill("hello one"));
+		console.log("CookieCacheManager:UsedSpace:", cacheManager.usedSpace());
+		cacheManager.set("key2", Array(30).fill("hello one"));
+		console.log("CookieCacheManager:UsedSpace:", cacheManager.usedSpace());
+		cacheManager.set("key3", Array(40).fill("hello one"));
+		console.log("CookieCacheManager:UsedSpace:", cacheManager.usedSpace());
+		cacheManager.clear();
+	}
+
+	function httpGetRequest() {
+		ffs.get("https://api.plos.org/search?q=title:DNA", { cacheLifetime: (1000 * 60 * 5), cache: ffs.LocalStorageCacheManager.getInstance() }).then(response => {
+			console.log(response);
+		}).catch(error => {
+			console.error(error);
+		});
+	}
+
+	function testWs() {
+		const ws = ffs.ws("wss://echo.websocket.org");
+		ws.onError((_, e) => {
+			console.error("WS.ERROR:", e);
+		});
+		ws.onOpen((_, __) => {
+			console.log("WS.OPEN: Connected to WS successful");
+		});
+		ws.onMessage((_, __, message) => {
+			console.log("WS.MSG:", message);
+		});
+	}
+
+	/*console.log("START TEST CACHE MANAGER");
+	testCacheManager_MCM();
+	testCacheManager_LSCM();
+	testCacheManager_SSCM();
+	testCookieManager_CCM();
+	console.log("END TEST CACHE MANAGER");*/
+
+	console.log("START TEST HTTP REQUEST");
+	httpGetRequest();
+	console.log("END TEST HTTP REQUEST");
+	testWs();
+
+</script>
+
+</html>

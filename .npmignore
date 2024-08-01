@@ -1,0 +1,16 @@
+browser_dist/
+build/
+test/
+docs/
+lib/
+logs
+*DS_Store
+*DS_Store
+*.zip
+*.tgz
+*.tar
+.cache
+*.log
+*.log*
+.mocharc.json
+tsconfig.json
