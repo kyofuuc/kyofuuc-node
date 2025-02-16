@@ -8,6 +8,7 @@ import {
     KyofuucObject,
 } from "./helper";
 import {
+    Config,
     Method,
     WsConfig,
     HttpConfig,
@@ -94,8 +95,8 @@ export class Ffs implements IHttp, IWs {
     NoSufficientCacheSpaceLeftError = NoSufficientCacheSpaceLeftError;
 
     constructor(config?: HttpConfig | WsConfig) {
-        this._ws = new Ws(config as WsConfig); 
-        this._http = new Http(config as HttpConfig); 
+        this._ws = new Ws(config as WsConfig);
+        this._http = new Http(config as HttpConfig);
     }
 
     static init(config?: HttpConfig | WsConfig) {
@@ -108,10 +109,19 @@ export class Ffs implements IHttp, IWs {
 
     // http
 
+    getConfig(type?: "HTTP" | "WS"): any {
+        if (type === "WS") return this._ws.getConfig();
+        return this._http.getConfig();
+    }
+
+    updateConfig(newConfig: Config | HttpConfig | WsConfig, merge?: boolean) {
+        this._http.updateConfig(newConfig as HttpConfig, merge);
+    }
+
     getUrl(config: HttpConfig): string {
         return this._http.getUrl(config);
     }
-    
+
     queueRequest(config: HttpConfig): void {
         return this._http.queueRequest(config);
     }

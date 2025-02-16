@@ -31,12 +31,12 @@ export const Defaults = {
     },
 
     httpConfig(config: HttpConfig) {
-        if (config.timeout === undefined) config.timeout = 5000;
         if (config.maxRetry === undefined) config.maxRetry = 99999;
         if (config.retryCount === undefined) config.retryCount = 0;
         if (config.method === undefined) config.method = Method.GET;
         if (config.maxRedirects === undefined) config.maxRedirects = 5;
         if (config.responseEncoding === undefined) config.responseEncoding = "utf8";
+        if (config.timeout === undefined) config.timeout = 1000 * 60 * 5; // 5 minutes
         if (config.connector === undefined) config.connector = Defaults.defaultHttpConnector();
         if (Utils.envIsNodeJs() && classes.http) {
             if (!config.httpAgent) config.httpAgent = new classes.http.Agent({ keepAlive: true });
