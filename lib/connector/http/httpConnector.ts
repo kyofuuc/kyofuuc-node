@@ -26,6 +26,8 @@ export default function httpConnector(config: HttpConfig, queueRequest?: QueueRe
             resolvePromise(response);
         }
 
+        if (config.dynamicConfig) config = config.dynamicConfig(config) as HttpConfig;
+
         const preRequestCachedResults = config.interceptor?.invoke(HandlerType.HTTP_PRE_REQUEST, config).filter((r) => r?.__cached__ === true);
         if (preRequestCachedResults?.length) {
             resolve(preRequestCachedResults[0] as Response);
@@ -121,8 +123,10 @@ export default function httpConnector(config: HttpConfig, queueRequest?: QueueRe
                 config.interceptor?.invoke(HandlerType.HTTP_PRE_RESPONSE, config, res);
             }
             if (!config.responseType) {
-                const contentType = (response.headers ?? {})['content-type'] as string;
-                if (contentType?.includes("json")) {
+                const contentType = ((response.headers ?? {})['content-type'] as string)?.toLowerCase();
+                if (response.status === 204 || contentType?.includes("nocontent")) {
+                    config.responseType = ResponseType.NOCONTENT;
+                } else if (contentType?.includes("json")) {
                     config.responseType = ResponseType.JSON;
                 } else if (contentType?.includes("octet-stream")) {
                     config.responseType = ResponseType.STREAM;

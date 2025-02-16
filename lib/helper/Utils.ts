@@ -1,4 +1,5 @@
 
+import { Buffer } from 'buffer';
 import { BasicAuth, Config, HttpConfig, QuerySerializer, Response } from "../types";
 
 export type KyofuucObject<T> = { [index: string]: T; };
@@ -32,6 +33,8 @@ const _ignoreHeadersDuplicateOf = [
 ];
 
 export const Utils = {
+
+    Buffer: Buffer,
 
     buildCacheKey(config: HttpConfig) {
         if (config.key) return config.key;

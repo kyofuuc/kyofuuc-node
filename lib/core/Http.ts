@@ -8,6 +8,7 @@ import { CacheManager, LocalStorageCacheManager, MapCacheManager, SessionStorage
 
 export interface IHttp {
     
+    getConfig(): HttpConfig;
     getUrl(config: Config): string;
     queueRequest(config: HttpConfig): void;
     get(url: string, config?: HttpConfig): Promise<any>;
@@ -15,6 +16,7 @@ export interface IHttp {
     retryRequests(cache?: CacheManager<any>): Promise<any>;
     delete(url: string, config?: HttpConfig): Promise<any>;
     options(url: string, config?: HttpConfig): Promise<any>;
+    updateConfig(newConfig: HttpConfig, merge?: boolean): void;
     put(url: string, data: any, config?: HttpConfig): Promise<any>;
     post(url: string, data: any, config?: HttpConfig): Promise<any>;
     patch(url: string, data: any, config?: HttpConfig): Promise<any>;
@@ -32,12 +34,21 @@ export class Http implements IHttp {
     constructor(baseConfig?: HttpConfig) {
         this._baseConfig = baseConfig ?? {};
         this.queueRequest = this.queueRequest.bind(this);
+        this.updateConfig = this.updateConfig.bind(this);
         this.retryRequests = this.retryRequests.bind(this);
     }
 
     static getInstance(baseConfig?: HttpConfig) {
         if (!Http.instance) Http.instance = new Http(baseConfig);
         return Http.instance;
+    }
+
+    getConfig() {
+        return this._baseConfig;
+    }
+
+    updateConfig(newConfig: HttpConfig, merge?: boolean) {
+        this._baseConfig = merge ? { ...this._baseConfig, ...newConfig } : newConfig;
     }
 
     getUrl(config: Config) {
@@ -102,19 +113,19 @@ export class Http implements IHttp {
     }
 
     queueRequest(config: HttpConfig) {
-        if (!config.cache) {
+        if (!config.cacheManager) {
             throw new MissingCacheError();
         }
-        EventQueue.getInstance().queueEvent(config.cache, {
+        EventQueue.getInstance().queueEvent(config.cacheManager, {
             type: EventQueueType.HTTP_REQUEST,
             subscriptionKey: config.subscriptionKey,
             params: [Utils.cherryPick(config, this._nonSerializable, true, this._queueRebuilds)],
         }, config.key);
     }
 
-    async retryRequests(cache?: CacheManager<any>): Promise<any> {
-        if (cache) {
-            EventQueue.getInstance().execute(cache, EventQueueType.HTTP_REQUEST);
+    async retryRequests(cacheManager?: CacheManager<any>): Promise<any> {
+        if (cacheManager) {
+            EventQueue.getInstance().execute(cacheManager, EventQueueType.HTTP_REQUEST);
             return;
         }
         EventQueue.getInstance().execute(MapCacheManager.getInstance(), EventQueueType.HTTP_REQUEST);
@@ -123,12 +134,15 @@ export class Http implements IHttp {
     }
 
     private _registerCacheInterceptors(config: HttpConfig) {
-        if (!config.cache) return;
+        if (!config.cacheManager) return;
         if (!config.refreshCache) {
             config.interceptor?.registerPreRequest((config?: HttpConfig) => {
-                const cached = config?.cache?.get(config);
+                if (config?.cache) {
+                    if ((typeof config?.cache === "function" && !config?.cache(config, "REQUEST")) || (typeof config?.cache === "boolean" && !config?.cache)) return;
+                }
+                const cached = config?.cacheManager?.get(config);
                 if (!cached || (config?.cacheLifetime && cached?.date && ((new Date()).getTime() - cached.date.getTime()) >= config?.cacheLifetime)) {
-                    if (cached && !config?.persistCache) config?.cache?.remove(config);
+                    if (cached && !config?.persistCache) config?.cacheManager?.remove(config);
                     return;
                 }
                 return {
@@ -139,8 +153,9 @@ export class Http implements IHttp {
             });
         }
         config.interceptor?.registerPostResponse((config?: HttpConfig, _?: KyofuucObject<any>, response?: Response) => {
+            if ((typeof config?.cache === "function" && !config?.cache(config, "RESPONSE", response)) || (typeof config?.cache === "boolean" && !config?.cache)) return;
             if (response?.__cached__ || response?.status === 150) return;
-            config?.cache?.set(config, response);
+            config?.cacheManager?.set(config, response);
         });
     }
 
@@ -148,8 +163,8 @@ export class Http implements IHttp {
 
 if (!EventQueue.executorIsRegistered(EventQueueType.HTTP_REQUEST)) {
     EventQueue.registerExecutor(EventQueueType.HTTP_REQUEST, Http.getInstance().request.bind(Http.getInstance()));
-    EventQueue.registerPreExecutor(EventQueueType.HTTP_REQUEST, (cache: CacheManager<any>, config: HttpConfig) => {
-        config.cache = cache;
+    EventQueue.registerPreExecutor(EventQueueType.HTTP_REQUEST, (cacheManager: CacheManager<any>, config: HttpConfig) => {
+        config.cacheManager = cacheManager;
         return [config];
     });
 }

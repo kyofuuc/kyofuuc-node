@@ -23,6 +23,7 @@ export interface IWs {
 
     close(): void;
     getState(): WsState;
+    getConfig(): WsConfig;
     getBufferedAmount(): number;
     getUrl(config?: Config): string;
     sendMessage(message: any): void;
@@ -31,6 +32,7 @@ export interface IWs {
     setBinaryType(binaryType: string): void;
     reconnect(connector?: WsConnector): IWs;
     getConnection(): WsConnection | undefined;
+    updateConfig(newConfig: WsConfig, merge?: boolean): void;
     connect(urlOrConfig: string | WsConfig, config?: WsConfig): IWs;
 
     onOpen(cb: (ws: IWs, event: any, options?: KyofuucObject<any>) => void, options?: KyofuucObject<any>): void;
@@ -72,6 +74,14 @@ export class Ws implements IWs {
 
     static ws(config: WsConfig) {
         return (new Ws()).connect(config);
+    }
+
+    getConfig() {
+        return this._baseConfig;
+    }
+
+    updateConfig(newConfig: WsConfig, merge?: boolean) {
+        this._baseConfig = merge ? { ...this._baseConfig, ...newConfig } : newConfig;
     }
 
     getUrl(config?: Config): string {

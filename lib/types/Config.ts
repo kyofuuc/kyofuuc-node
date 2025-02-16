@@ -1,4 +1,5 @@
 
+import { Response } from "./Response";
 import { Interceptor } from "../core";
 import { KyofuucObject } from "../helper";
 import { CacheManager } from "../cachemanager";
@@ -42,6 +43,7 @@ export interface Config {
     interceptor?: Interceptor;
     querySerializer?: QuerySerializer;
     query?: KyofuucObject<any> | URLSearchParams;
+    dynamicConfig?: (existingConfig: Config | HttpConfig | WsConfig) => Config | HttpConfig | WsConfig;
 
 }
 
@@ -71,13 +73,14 @@ export type HttpConfig = {
     connector?: HttpConnector;
     maxContentLength?: number;
     withCredentials?: boolean;
-    cache?: CacheManager<any>;
     responseEncoding?: string;
+    cacheManager?: CacheManager<any>;
     storeRedirectsResponses?: boolean;
     validateStatus?: (status: number) => boolean;
     onUploadProgress?: (...params: any[]) => any;
     onDownloadProgress?: (...params: any[]) => any;
     headers?: KyofuucObject<number | string | string[]>;
+    cache?: boolean | ((config?: Config, type?: "REQUEST" | "RESPONSE", response?: Response) => boolean);
     xsrf?: {
         value?: any;
         headerName: string;

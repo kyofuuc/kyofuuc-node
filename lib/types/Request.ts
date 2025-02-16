@@ -1,4 +1,5 @@
 
+import { Buffer } from 'buffer';
 import { Stream } from "stream";
 import { Config } from "./Config";
 import { ErrorCode, KyofuucObject, Utils } from "../helper";

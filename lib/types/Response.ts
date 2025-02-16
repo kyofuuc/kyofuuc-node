@@ -10,6 +10,7 @@ export const ResponseType = {
     JSON: "JSON",
     STREAM: "STREAM",
     BUFFER: "BUFFER",
+    NOCONTENT: "NOCONTENT",
     ARRAY_BUFFER: "ARRAY_BUFFER",
 
 }
@@ -51,6 +52,10 @@ export function bufferResponseTransformer(data: Stream | any[] | string) {
 
 export function arrayBufferResponseTransformer(data: Stream | any[] | string) {
     return { data };
+}
+
+export function noContentResponseTransformer(_: Stream | any[] | string) {
+    return { data: "" };
 }
 
 export const ResponseProcessor = {
@@ -102,5 +107,6 @@ if (!_defaultResponseTransformerRegistered) {
     ResponseProcessor.register(ResponseType.JSON, jsonResponseTransformer);
     ResponseProcessor.register(ResponseType.BUFFER, bufferResponseTransformer);
     ResponseProcessor.register(ResponseType.STREAM, streamResponseTransformer);
+    ResponseProcessor.register(ResponseType.NOCONTENT, noContentResponseTransformer);
     ResponseProcessor.register(ResponseType.ARRAY_BUFFER, arrayBufferResponseTransformer);
 }
