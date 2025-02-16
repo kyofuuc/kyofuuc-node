@@ -92,13 +92,13 @@ export class Interceptor {
         return Object.values(this._handlers[`${type}`] ?? {});
     }
 
-    invoke(type: HandlerType, config?: Config, response?: any): KyofuucObject<any>[] {
+    async invoke(type: HandlerType, config?: Config, response?: any): Promise<KyofuucObject<any>[]> {
         const results: KyofuucObject<any>[] = [];
         const handlers = Object.values(this._handlers[`${type}`] ?? {});
 
         for (const handler of handlers) {
             if (handler.when && !handler.when(config)) continue;
-            const result = handler.cb(config, handler.options, response);
+            const result = await handler.cb(config, handler.options, response);
             if (result === null || result === undefined) continue;
             results.push(result);
         }

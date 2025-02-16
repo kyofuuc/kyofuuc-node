@@ -78,7 +78,7 @@ it('validate Interceptor handlers', () => {
 	assert.equal(3, interceptor.handlers(HandlerType.HTTP_POST_REQUEST).length);
 });
 
-it('validate Interceptor invoke', () => {
+it('validate Interceptor invoke', async () => {
 	const interceptor = new Interceptor();
 
 	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: () => { }, when: () => true }));
@@ -101,8 +101,8 @@ it('validate Interceptor invoke', () => {
 		}, when: () => false
 	}));
 
-	assert.equal(0, interceptor.invoke(HandlerType.HTTP_PRE_REQUEST).length);
-	assert.equal(2, interceptor.invoke(HandlerType.HTTP_POST_REQUEST).length);
+	assert.equal(0, (await interceptor.invoke(HandlerType.HTTP_PRE_REQUEST)).length);
+	assert.equal(2, (await interceptor.invoke(HandlerType.HTTP_POST_REQUEST)).length);
 });
 
 it('validate Interceptor registers and purge', () => {

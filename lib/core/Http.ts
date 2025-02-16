@@ -1,5 +1,6 @@
 
 import { Interceptor } from "./Interceptor";
+import { PromiscuousPromise } from "./PromiscuousPromise";
 import { EventQueue, EventQueueType } from "./EventQueue";
 import { Defaults, KyofuucObject, Utils } from "../helper";
 import { Config, Response, HttpConfig, Method } from "../types";
@@ -81,6 +82,9 @@ export class Http implements IHttp {
             mergedConfig.auth = { username: mergedConfig.parsed.username, password: mergedConfig.parsed.password };
         }
         this._registerCacheInterceptors(mergedConfig);
+        if (mergedConfig.promiscuous) {
+            return (new PromiscuousPromise(mergedConfig.connector!, mergedConfig, this.queueRequest)).get();
+        }
         return mergedConfig.connector!(mergedConfig, this.queueRequest);
     }
 

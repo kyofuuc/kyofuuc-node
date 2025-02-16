@@ -1,6 +1,6 @@
 {
   "name": "kyofuuc",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "description": "Simple yet powerful HTTP, WS client with cache and offline support for Typescript + Javascript. For both browser and Node.",

@@ -39,6 +39,7 @@ export interface Config {
     auth?: BasicAuth;
     baseUrl?: string;
     requestType?: string;
+    promiscuous?: boolean;
     responseType?: string;
     interceptor?: Interceptor;
     querySerializer?: QuerySerializer;
