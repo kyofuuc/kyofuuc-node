@@ -258,10 +258,10 @@ it('validate httpConnector test request basic auth', async () => {
 function _registerCacheInterceptors(config: HttpConfig) {
     if (!config.cache) return;
     if (!config.refreshCache) {
-        config.interceptor?.registerPreRequest((config?: HttpConfig) => {
-            const cached = config?.cacheManager?.get(config);
+        config.interceptor?.registerPreRequest(async (config?: HttpConfig) => {
+            const cached = await config?.cacheManager?.get(config);
             if (!cached || (config?.cacheLifetime && cached?.date && (cached.date.getTime() - (new Date()).getTime()) >= config?.cacheLifetime)) {
-                if (cached && !config?.persistCache) config?.cacheManager?.remove(config);
+                if (cached && !config?.persistCache) await config?.cacheManager?.remove(config);
                 return;
             }
             return {
@@ -271,9 +271,9 @@ function _registerCacheInterceptors(config: HttpConfig) {
             };
         });
     }
-    config.interceptor?.registerPostResponse((config?: HttpConfig, _?: KyofuucObject<any>, response?: Response) => {
+    config.interceptor?.registerPostResponse(async (config?: HttpConfig, _?: KyofuucObject<any>, response?: Response) => {
         if (response?.__cached__ || response?.status === 150) return;
-        config?.cacheManager?.set(config, response);
+        await config?.cacheManager?.set(config, response);
     });
 }
 

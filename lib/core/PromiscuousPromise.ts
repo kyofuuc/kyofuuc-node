@@ -27,6 +27,7 @@ export class PromiscuousPromise {
         return laPromise as any;
     }
 
+    // DOES NOT WORK - JS IS SINGLE THREADED
     static AWAIT<T>(callable: PromiscuousPromise | Promise<T>) {
         let awaitedError;
         let awaitedResult;

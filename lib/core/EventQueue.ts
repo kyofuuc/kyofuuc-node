@@ -91,7 +91,7 @@ export class EventQueue implements IEventQueue {
     }
 
     async executeOnly(cache: CacheManager<any>, id: string, type?: string) {
-        const event = cache.getValue(this._buildId(id)) as Event;
+        const event = await cache.getValue(this._buildId(id)) as Event;
         if (event === undefined) {
             throw new NoEventFoundWithIdError(id);
         }
@@ -122,7 +122,7 @@ export class EventQueue implements IEventQueue {
 
     async execute(cache: CacheManager<any>, type?: string) {
         const results: any[] = [];
-        const keys = cache.find((key) => key.startsWith(`KQ__`));
+        const keys = await cache.find((key) => key.startsWith(`KQ__`));
         for (const key of keys) {
             const result = await this.executeOnly(cache, key.replace(`KQ__`, ""), type);
             if (result === "___KF_ALREADY_SCHEDULED_FOR_TIMED_EXECUTION___") continue;

@@ -34,63 +34,63 @@ export class MapCacheManager<T> implements CacheManager<T> {
         return MapCacheManager.instance;
     }
 
-    usedSpace(): number {
+    async usedSpace(): Promise<number> {
         return this._entriesCount;
     }
 
-    availableSpace(): number {
+    async availableSpace(): Promise<number> {
         return this._options.maxEntries! - this._entriesCount;
     }
 
-    calculateSpace(_: string | HttpConfig, __: T): number {
+    async calculateSpace(_: string | HttpConfig, __: T): Promise<number> {
         return 1;
     }
 
-    has(configOrKey: string | HttpConfig): boolean {
-        return this._resolve(configOrKey).exists;
+    async has(configOrKey: string | HttpConfig): Promise<boolean> {
+        return (await this._resolve(configOrKey)).exists;
     }
 
-    get(configOrKey: string | HttpConfig): { date: Date; value: T; } | undefined {
-        const resolve = this._resolve(configOrKey);
+    async get(configOrKey: string | HttpConfig): Promise<{ date: Date; value: T; } | undefined> {
+        const resolve = await this._resolve(configOrKey);
         if (!resolve.exists) return undefined;
         const value = this._options.bucket[resolve.key];
-        const parsed = JSON.parse(this._options.encryptor ? this._options.encryptor.decrypt(value) : value);
+        const parsed = JSON.parse(this._options.encryptor ? await this._options.encryptor.decrypt(value, true) : value);
         return {
             value: parsed.value,
             date: new Date(parsed.date),
         };
     }
 
-    getValue(configOrKey: string | HttpConfig): T | undefined {
-        return (this.get(configOrKey)?? {}).value;
+    async getValue(configOrKey: string | HttpConfig): Promise<T | undefined> {
+        return (await this.get(configOrKey) ?? {}).value;
     }
 
-    set(configOrKey: string | HttpConfig, value: T): void {
+    async set(configOrKey: string | HttpConfig, value: T): Promise<void> {
         if (this.calculateSpace(configOrKey, value) > this.availableSpace()) {
             throw new NoSufficientCacheSpaceLeftError();
         }
-        const resolve = this._resolve(configOrKey);
+        const resolve = await this._resolve(configOrKey);
         const entryStr = Utils.safeStringify({
             value,
             date: new Date(),
         });
-        this._options.bucket[resolve.key] = (this._options.encryptor ? this._options.encryptor.encrypt(entryStr) : entryStr);
+        this._options.bucket[resolve.key] = (this._options.encryptor ? await this._options.encryptor.encrypt(entryStr, true) : entryStr);
         if (!resolve.exists) this._entriesCount++;
     }
 
-    remove(configOrKey: string | HttpConfig): void {
-        const resolve = this._resolve(configOrKey);
+    async remove(configOrKey: string | HttpConfig): Promise<void> {
+        const resolve = await this._resolve(configOrKey);
         if (!resolve.exists) return;
         delete this._options.bucket[resolve.key];
         this._entriesCount--;
     }
 
-    clear(): void {
+    async clear(): Promise<void> {
         this._options.bucket = {};
         this._entriesCount = 0;
     }
 
-    find(cond: (key: string) => boolean) {
+    async find(cond: (key: string) => boolean) {
         const found: string[] = [];
         for (const key in this._options.bucket) {
             if (cond(key)) found.push(key);
@@ -98,9 +98,9 @@ export class MapCacheManager<T> implements CacheManager<T> {
         return found;
     }
 
-    private _resolve(configOrKey: string | HttpConfig): { exists: boolean; key: string; } {
+    private async _resolve(configOrKey: string | HttpConfig): Promise<{ exists: boolean; key: string; }> {
         let key = ((typeof configOrKey === "string") ? configOrKey : Utils.buildCacheKey(configOrKey));
-        key = (this._options.encryptKey && this._options.encryptor ? this._options.encryptor.encrypt(key) : key);
+        key = (this._options.encryptKey && this._options.encryptor ? await this._options.encryptor.encrypt(key, true) : key);
         const exists = key in this._options.bucket;
         return { key, exists };
     }

@@ -16,7 +16,7 @@ export enum HandlerType {
     HTTP_REQUEST_MAXIMUM_REDIRECTS_REACHED = "HTTP_REQUEST_MAXIMUM_REDIRECTS_REACHED",
 }
 
-export type HandlerCallback = (config?: Config, options?: KyofuucObject<any>, response?: any) => KyofuucObject<any> | void;
+export type HandlerCallback = (config?: Config, options?: KyofuucObject<any>, response?: any) => (Promise<KyofuucObject<any> | void> | KyofuucObject<any> | void);
 
 export interface Handler {
     type: HandlerType;

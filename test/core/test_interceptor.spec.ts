@@ -8,9 +8,9 @@ it('validate Interceptor constructor', () => {
 
 	assert.equal(0, interceptor1.count());
 	assert.equal(0, interceptor2.count());
-	interceptor1.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: () => { }, when: () => true });
-	interceptor1.register({ type: HandlerType.HTTP_POST_REQUEST, cb: () => { }, when: () => true });
-	interceptor2.register({ type: HandlerType.HTTP_POST_RESPONSE, cb: () => { }, when: () => true });
+	interceptor1.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: async () => { }, when: () => true });
+	interceptor1.register({ type: HandlerType.HTTP_POST_REQUEST, cb: async () => { }, when: () => true });
+	interceptor2.register({ type: HandlerType.HTTP_POST_RESPONSE, cb:async () => { }, when: () => true });
 	const interceptor3 = new Interceptor([ interceptor1, interceptor2 ]);
 	assert.equal(2, interceptor1.count());
 	assert.equal(1, interceptor2.count());
@@ -21,8 +21,8 @@ it('validate Interceptor initialize and register and unregister', () => {
 	const interceptor = new Interceptor();
 
 	assert.equal(0, interceptor.count());
-	const key1 = interceptor.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: () => { }, when: () => true });
-	const key2 = interceptor.register({ type: HandlerType.HTTP_POST_REQUEST, cb: () => { }, when: () => false });
+	const key1 = interceptor.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: async () => { }, when: () => true });
+	const key2 = interceptor.register({ type: HandlerType.HTTP_POST_REQUEST, cb: async () => { }, when: () => false });
 	assert.equal("string", typeof key1);
 	assert.equal("string", typeof key2);
 	assert.equal(2, interceptor.count());
@@ -38,15 +38,15 @@ it('validate Interceptor typed registers', () => {
 	const interceptor = new Interceptor();
 
 	assert.equal(0, interceptor.count());
-	const key1 = interceptor.registerOnWsOpen(() => { });
-	const key2 = interceptor.registerOnWsClose(() => { });
-	const key3 = interceptor.registerOnWsError(() => { });
-	const key4 = interceptor.registerPreRequest(() => { });
-	const key5 = interceptor.registerPostRequest(() => { });
-	const key6 = interceptor.registerPreResponse(() => { });
-	const key7 = interceptor.registerOnWsMessage(() => { });
-	const key8 = interceptor.registerPostResponse(() => { });
-	const key9 = interceptor.registerOnWsStateChange(() => { });
+	const key1 = interceptor.registerOnWsOpen(async () => { });
+	const key2 = interceptor.registerOnWsClose(async () => { });
+	const key3 = interceptor.registerOnWsError(async () => { });
+	const key4 = interceptor.registerPreRequest(async () => { });
+	const key5 = interceptor.registerPostRequest(async () => { });
+	const key6 = interceptor.registerPreResponse(async () => { });
+	const key7 = interceptor.registerOnWsMessage(async () => { });
+	const key8 = interceptor.registerPostResponse(async () => { });
+	const key9 = interceptor.registerOnWsStateChange(async () => { });
 	assert.equal("string", typeof key1);
 	assert.equal("string", typeof key2);
 	assert.equal("string", typeof key3);
@@ -68,11 +68,11 @@ it('validate Interceptor typed registers', () => {
 it('validate Interceptor handlers', () => {
 	const interceptor = new Interceptor();
 
-	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: () => { }, when: () => true }));
-	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: () => { }, when: () => false }));
-	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_POST_REQUEST, cb: () => { }, when: () => true }));
-	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_POST_REQUEST, cb: () => { }, when: () => true }));
-	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_POST_REQUEST, cb: () => { }, when: () => true }));
+	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: async () => { }, when: () => true }));
+	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: async () => { }, when: () => false }));
+	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_POST_REQUEST, cb: async () => { }, when: () => true }));
+	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_POST_REQUEST, cb: async () => { }, when: () => true }));
+	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_POST_REQUEST, cb: async () => { }, when: () => true }));
 
 	assert.equal(2, interceptor.handlers(HandlerType.HTTP_PRE_REQUEST).length);
 	assert.equal(3, interceptor.handlers(HandlerType.HTTP_POST_REQUEST).length);
@@ -81,22 +81,22 @@ it('validate Interceptor handlers', () => {
 it('validate Interceptor invoke', async () => {
 	const interceptor = new Interceptor();
 
-	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: () => { }, when: () => true }));
-	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: () => { }, when: () => false }));
-	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_POST_REQUEST, cb: () => { }, when: () => true }));
-	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_POST_REQUEST, cb: () => { }, when: () => true }));
+	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: async () => { }, when: () => true }));
+	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: async () => { }, when: () => false }));
+	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_POST_REQUEST, cb: async () => { }, when: () => true }));
+	assert.equal("string", typeof interceptor.register({ type: HandlerType.HTTP_POST_REQUEST, cb: async () => { }, when: () => true }));
 	assert.equal("string", typeof interceptor.register({
-		type: HandlerType.HTTP_POST_REQUEST, cb: () => {
+		type: HandlerType.HTTP_POST_REQUEST, cb: async () => {
 			return {};
 		}, when: () => true
 	}));
 	assert.equal("string", typeof interceptor.register({
-		type: HandlerType.HTTP_POST_REQUEST, cb: () => {
+		type: HandlerType.HTTP_POST_REQUEST, cb: async () => {
 			return {};
 		}
 	}));
 	assert.equal("string", typeof interceptor.register({
-		type: HandlerType.HTTP_POST_REQUEST, cb: () => {
+		type: HandlerType.HTTP_POST_REQUEST, cb: async () => {
 			return {};
 		}, when: () => false
 	}));
@@ -113,9 +113,9 @@ it('validate Interceptor registers and purge', () => {
 	assert.equal(0, interceptor1.count());
 	assert.equal(0, interceptor2.count());
 	assert.equal(0, interceptor3.count());
-	interceptor1.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: () => { }, when: () => true });
-	interceptor1.register({ type: HandlerType.HTTP_POST_REQUEST, cb: () => { }, when: () => true });
-	interceptor2.register({ type: HandlerType.HTTP_POST_RESPONSE, cb: () => { }, when: () => true });
+	interceptor1.register({ type: HandlerType.HTTP_PRE_REQUEST, cb: async () => { }, when: () => true });
+	interceptor1.register({ type: HandlerType.HTTP_POST_REQUEST, cb: async () => { }, when: () => true });
+	interceptor2.register({ type: HandlerType.HTTP_POST_RESPONSE, cb: async () => { }, when: () => true });
 	interceptor3.registers([ interceptor1, interceptor2 ]);
 	assert.equal(2, interceptor1.count());
 	assert.equal(1, interceptor2.count());
