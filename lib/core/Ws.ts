@@ -248,11 +248,11 @@ export class Ws implements IWs {
 
     private _registerInterceptors() {
         if (!this._config!.protocol || this._config!.protocol === "text") {
-            this._config!.requestType = RequestType.TEXT;
-            this._config!.responseType = RequestType.TEXT;
+            this._config!.requestType = RequestType.RAW_TEXT;
+            this._config!.responseType = RequestType.RAW_TEXT;
         } else if (this._config!.protocol === "json") {
-            this._config!.requestType = RequestType.JSON;
-            this._config!.responseType = RequestType.JSON;
+            this._config!.requestType = RequestType.RAW_JSON;
+            this._config!.responseType = RequestType.RAW_JSON;
         }
 
         this.onOpen(((_: IWs, __: any, ___?: KyofuucObject<any>) => {
@@ -264,12 +264,12 @@ export class Ws implements IWs {
 
         this.onClose(((_: IWs, __: any, ___?: KyofuucObject<any>) => {
             if (this._state !== WsState.DISCONNECTING && this._config?.reconnect) {
-                if (this._lastReconnectionCount < (this._config?.maxReconnect ?? 0)) {
+                if (!this._config?.maxReconnect || (this._lastReconnectionCount < this._config?.maxReconnect)) {
                     this._reconnectionCount++;
                     this._lastReconnectionCount++;
                     this._nextReconnectionDelay = (this._config?.reconnectIntervalByPower
                         ? Math.pow((this._config.reconnectInterval ?? 0), this._reconnectionCount)
-                        : this._config.reconnectInterval) ?? 0
+                        : (this._config.reconnectInterval ?? 0));
                     setTimeout(this.reconnect.bind(this), this._nextReconnectionDelay * 1000);
                     return;
                 }

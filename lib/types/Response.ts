@@ -10,6 +10,8 @@ export const ResponseType = {
     JSON: "JSON",
     STREAM: "STREAM",
     BUFFER: "BUFFER",
+    RAW_TEXT: "RAW_TEXT",
+    RAW_JSON: "RAW_JSON",
     NOCONTENT: "NOCONTENT",
     ARRAY_BUFFER: "ARRAY_BUFFER",
 
@@ -38,7 +40,15 @@ export function textResponseTransformer(data: Stream | any[] | string) {
     return { data };
 }
 
+export function rawTextResponseTransformer(data: Stream | any[] | string) {
+    return { data };
+}
+
 export function jsonResponseTransformer(data: Stream | any[] | string) {
+    return { data: JSON.parse(data as string), };
+}
+
+export function rawJsonResponseTransformer(data: Stream | any[] | string) {
     return { data: JSON.parse(data as string), };
 }
 
@@ -107,6 +117,8 @@ if (!_defaultResponseTransformerRegistered) {
     ResponseProcessor.register(ResponseType.JSON, jsonResponseTransformer);
     ResponseProcessor.register(ResponseType.BUFFER, bufferResponseTransformer);
     ResponseProcessor.register(ResponseType.STREAM, streamResponseTransformer);
+    ResponseProcessor.register(ResponseType.RAW_TEXT, rawTextResponseTransformer);
+    ResponseProcessor.register(ResponseType.RAW_JSON, rawJsonResponseTransformer);
     ResponseProcessor.register(ResponseType.NOCONTENT, noContentResponseTransformer);
     ResponseProcessor.register(ResponseType.ARRAY_BUFFER, arrayBufferResponseTransformer);
 }

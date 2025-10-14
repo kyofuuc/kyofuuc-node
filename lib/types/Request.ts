@@ -11,13 +11,15 @@ export const RequestType = {
     JSON: "JSON",
     STREAM: "STREAM",
     BUFFER: "BUFFER",
+    RAW_TEXT: "RAW_TEXT",
+    RAW_JSON: "RAW_JSON",
     FORM_DATA: "FORM_DATA",
     ARRAY_BUFFER: "ARRAY_BUFFER",
     URL_SEARCH_PARAMS: "URL_SEARCH_PARAMS",
 
 }
 
-export type RequestTransformer = (data: any) => { buffer: Buffer; contentType: string; };
+export type RequestTransformer = (data: any) => { buffer: Buffer | string; contentType: string; };
 
 export interface Request {
 
@@ -35,10 +37,24 @@ export function textRequestTransformer(data: string) {
     };
 }
 
+export function rawTextRequestTransformer(data: string) {
+    return {
+        buffer: data,
+        contentType: "text",
+    };
+}
+
 export function jsonRequestTransformer(data: object) {
     return {
         contentType: "application/json",
         buffer: Buffer.from(Utils.safeStringify(data), 'utf-8'),
+    };
+}
+
+export function rawJsonRequestTransformer(data: object) {
+    return {
+        contentType: "text",
+        buffer: JSON.stringify(data),
     };
 }
 
@@ -119,6 +135,8 @@ if (!_defaultRequestTransformerRegistered) {
     RequestProcessor.register(RequestType.JSON, jsonRequestTransformer);
     RequestProcessor.register(RequestType.STREAM, streamRequestTransformer);
     RequestProcessor.register(RequestType.BUFFER, bufferRequestTransformer);
+    RequestProcessor.register(RequestType.RAW_TEXT, rawTextRequestTransformer);
+    RequestProcessor.register(RequestType.RAW_JSON, rawJsonRequestTransformer);
     RequestProcessor.register(RequestType.FORM_DATA, formDataRequestTransformer);
     RequestProcessor.register(RequestType.ARRAY_BUFFER, arrayBufferRequestTransformer);
     RequestProcessor.register(RequestType.URL_SEARCH_PARAMS, urlSearchParamsRequestTransformer);

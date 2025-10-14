@@ -35,7 +35,7 @@ export default function httpConnector(config: HttpConfig, queueRequest?: QueueRe
         }
 
         const headers = config.headers ?? {};
-        let data: Buffer | undefined = config.data;
+        let data: Buffer | string | undefined = config.data;
         const headerNamesMap = Object.keys(headers).reduce((acc: KyofuucObject<string>, header: string) => {
             acc[header.toLowerCase()] = header;
             return acc;

@@ -370,9 +370,6 @@ export const Utils = {
     kyofuucError(message: string | Error, config: Config, code: ErrorCode, request?: any, response?: Response) {
         let error = (typeof message === "string" ? new Error(message) : message) as any;
         error.config = config;
-        if (code) {
-            error.code = code;
-        }
         error.request = request;
         error.response = response;
         error.isKyofuucError = true;
@@ -380,7 +377,6 @@ export const Utils = {
         error.toJSON = function toJSON() {
             return {
                 name: this.name,
-                code: this.code,
                 stack: this.stack,
                 config: this.config,
                 number: this.number,
@@ -390,6 +386,7 @@ export const Utils = {
                 description: this.description,
                 status: this.response?.status,
                 columnNumber: this.columnNumber,
+                code: (code ? code : error.code),
                 responseBody: this.response?.body,
             };
         };
