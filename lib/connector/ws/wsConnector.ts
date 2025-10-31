@@ -1,6 +1,6 @@
 
 import { HandlerType } from "../../core";
-import classes from "../../helper/node_classes";
+import classes from "../../helper/shadows/classes";
 import { WsConfig, WsConnection } from "../../types";
 
 export default function wsConnector(config: WsConfig): WsConnection {

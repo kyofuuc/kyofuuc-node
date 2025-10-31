@@ -1,20 +1,21 @@
 
-import { Utils } from "./Utils";
-const classes = require("../helper/node_classes");
+const classes = require("../helper/shadows/classes");
+import { KyofuucEnvironment, Utils } from "./Utils";
 import { HttpConfig, Method, WsConfig } from "../types";
 
 export const Defaults = {
 
     VERSION: "0.0.3",
     MaxObjectEntrySize: 999999,
+    ENVIRONMENT: KyofuucEnvironment.AUTO,
     MaxCookieLength: 3800, // 3800 Bytes
     MaxStorageSpace: 5120000, // 5000 * 1024 = 5MB
 
     defaultHttpConnector() {
         let connector;
-        if (typeof XMLHttpRequest !== 'undefined') {
+        if (Defaults.ENVIRONMENT === KyofuucEnvironment.BROWSER || (Defaults.ENVIRONMENT === KyofuucEnvironment.AUTO && typeof XMLHttpRequest !== 'undefined')) {
             connector = require('../connector/http/xhrConnector');
-        } else if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
+        } else if (Defaults.ENVIRONMENT === KyofuucEnvironment.NODE || typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
             connector = require('../connector/http/httpConnector');
         }
         return connector;

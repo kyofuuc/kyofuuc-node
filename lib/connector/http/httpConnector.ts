@@ -1,6 +1,6 @@
 
 import { HandlerType } from "../../core";
-import classes from "../../helper/node_classes";
+import classes from "../../helper/shadows/classes";
 import { Defaults, ErrorCode, KyofuucObject, Utils } from "../../helper";
 import { HttpConfig, Response, RequestType, QueueRequest, CompressionProcessor, ResponseType, transformResponseData, transformRequestData } from "../../types";
 

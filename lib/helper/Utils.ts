@@ -4,6 +4,14 @@ import { BasicAuth, Config, HttpConfig, QuerySerializer, Response } from "../typ
 
 export type KyofuucObject<T> = { [index: string]: T; };
 
+export enum KyofuucEnvironment {
+
+    AUTO,
+    NODE,
+    BROWSER,
+
+}
+
 export enum ErrorCode {
 
     UNKNOWN_ERROR = "UNKNOWN_ERROR",

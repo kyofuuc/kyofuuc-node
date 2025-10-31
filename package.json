@@ -5,8 +5,9 @@
   "types": "./dist/index.d.ts",
   "description": "Simple yet powerful HTTP, WS client with cache and offline support for Typescript + Javascript. For both browser and Node.",
   "browser": {
-    "./lib/helper/node_classes.ts": "./lib/helper/browser_classes.ts",
-    "./lib/connector/http/httpConnector.js": "./lib/connector/http/xhrConnector.js"
+    "./lib/connector/http/httpConnector.js": "./lib/connector/http/xhrConnector.js",
+    "./lib/helper/shadows/node_classes.ts": "./lib/helper/shadows/browser_classes.ts",
+    "./lib/helper/shadows/browser_classes.ts": "./lib/helper/shadows/classes.ts"
   },
   "jsdelivr": "browser_dist/kyofuuc.min.js",
   "unpkg": "browser_dist/kyofuuc.min.js",
