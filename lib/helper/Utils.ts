@@ -282,6 +282,7 @@ export const Utils = {
         return fullUrl.substring(0, protocolIndex + (protocolIndex > -1 ? 3 : 0)) + fullUrl.substring(atIndex + 1);
     },
 
+    // TODO seperate the query serializer
     buildUrlWithQuery(url: string, query: KyofuucObject<any> | URLSearchParams, querySerializer?: QuerySerializer) {
         let serializedQuery: string | undefined;
 

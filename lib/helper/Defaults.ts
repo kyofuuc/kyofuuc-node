@@ -32,6 +32,7 @@ export const Defaults = {
     },
 
     httpConfig(config: HttpConfig) {
+        if (config.cache === undefined) config.cache = false;
         if (config.maxRetry === undefined) config.maxRetry = 99999;
         if (config.retryCount === undefined) config.retryCount = 0;
         if (config.method === undefined) config.method = Method.GET;
