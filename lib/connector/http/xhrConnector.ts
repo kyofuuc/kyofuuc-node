@@ -239,7 +239,7 @@ export default function xhrConnector(config: HttpConfig, queueRequest?: QueueReq
             if (config.onDownloadProgress) req.addEventListener("progress", config.onDownloadProgress);
             if (config.onUploadProgress) req.upload.addEventListener("progress", config.onUploadProgress);
 
-            req.send(data);
+            req.send(data as any);
             if (redirectCount === 0) {
                 await config.interceptor?.invoke(HandlerType.HTTP_POST_REQUEST, config);
             }

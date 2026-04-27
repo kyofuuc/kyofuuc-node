@@ -87,8 +87,8 @@ export class CookieCacheManager<T> implements CacheManager<T> {
         this._availableSpace -= spaceAllocated;
     }
 
-    async remove(configOrKey: string | HttpConfig): Promise<void> {
-        const resolve = await this._resolve(configOrKey);
+    async remove(configOrKey: string | HttpConfig, resolve?: { exists: boolean; key: string; }): Promise<void> {
+        if (!resolve) resolve = await this._resolve(configOrKey);
         if (!resolve.exists) return;
         const spaceToFree = await this.calculateSpace(resolve.key, this.getValue(configOrKey) as any);
         this._usedSpace -= spaceToFree;

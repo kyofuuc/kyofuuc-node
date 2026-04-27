@@ -11,4 +11,4 @@ if (Defaults.ENVIRONMENT === KyofuucEnvironment.AUTO) {
     module.exports = require("./browser_classes"); 
 }
 
-export default module.exports
+export default module.exports;

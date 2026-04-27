@@ -40,6 +40,7 @@ import {
     CacheManager,
     MapCacheManager,
     CookieCacheManager,
+    IndexDbCacheManager,
     StorageCacheManager,
     LocalStorageCacheManager,
     SessionStorageCacheManager,
@@ -84,6 +85,7 @@ export class Ffs implements IHttp, IWs {
     XMLHttpRequest = classes.XMLHttpRequest;
     CookieCacheManager = CookieCacheManager;
     StorageCacheManager = StorageCacheManager;
+    IndexDbCacheManager = IndexDbCacheManager;
     CompressionProcessor = CompressionProcessor;
     transformRequestData = transformRequestData;
     transformResponseData = transformResponseData;

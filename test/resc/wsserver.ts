@@ -1,6 +1,5 @@
 
-const WS = require('ws');
-const url = require('url');
+import * as WS from 'ws';
 
 function onMessage(ws: any, message: any) {
 	if (ws.protocol === "json") {
@@ -15,7 +14,7 @@ function onMessage(ws: any, message: any) {
 }
 let wss;
 function onConnect(ws: any, req: any) {
-	const params = new URLSearchParams(url.parse(req.url).query);
+	const params = new URLSearchParams(new URL(req.url).searchParams);
 	if (params.get('uid')) {
 		let uid = params.get('uid');
 		let sid = params.get('sid');
@@ -60,7 +59,7 @@ class WSServer {
 (WSServer.prototype as any).listen = function listen(port: any, callback: any) {
 	this.port = port;
 	this.eventListeners = [];
-	this.wss = new WS.Server({ port: port }, callback).on("error", (err: any) => {
+	this.wss = new WS.WebSocketServer({ port: port }, callback).on("error", (err: any) => {
 		this.sendEvent("error", err);
 	});
 	this.wss.on('connection', onConnect);

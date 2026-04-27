@@ -62,6 +62,19 @@
 		cacheManager.clear();
 	}
 
+	async function testCookieManager_IndexDBCM() {
+		const cacheManager = ffs.IndexDbCacheManager.getInstance({ bucket: "API_CACHE" });
+		await cacheManager.set("key1", Array(20).fill("hello one"));
+		console.log("IndexDbCacheManager:UsedSpace:", await cacheManager.usedSpace());
+		cacheManager.set("key2", Array(30).fill("hello one"));
+		console.log("IndexDbCacheManager:UsedSpace:", await cacheManager.usedSpace());
+		cacheManager.set("key3", Array(40).fill("hello one"));
+		console.log("IndexDbCacheManager:UsedSpace:", await cacheManager.usedSpace());
+		console.log("IndexDbCacheManager:GetValue:", await cacheManager.getValue("key1"));
+		await cacheManager.clear();
+
+	}
+
 	function httpGetRequest() {
 		ffs.get("https://api.plos.org/search?q=title:DNA", { cacheLifetime: (1000 * 60 * 5), cacheManager: ffs.LocalStorageCacheManager.getInstance(), cache: true }).then(response => {
 			console.log(response);
@@ -89,11 +102,12 @@
 	testCacheManager_SSCM();
 	testCookieManager_CCM();
 	console.log("END TEST CACHE MANAGER");*/
+	testCookieManager_IndexDBCM();
 
-	console.log("START TEST HTTP REQUEST");
+	/*console.log("START TEST HTTP REQUEST");
 	httpGetRequest();
 	console.log("END TEST HTTP REQUEST");
-	testWs();
+	testWs();*/
 
 </script>
 

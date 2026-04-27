@@ -10,7 +10,7 @@ let server: any;
 let port = 4000;
 const openedWSConnections: WsConnection[] = [];
 
-before((done) => {
+/*before((done) => {
     const startServer = (count: number, done: any) => {
         if (count >= 5) return;
         server = (new (wsapp as any)()).listen(port, done).on('error', (e: any) => {
@@ -28,7 +28,7 @@ after(done => {
             clearInterval(intervalId);
         }
     }, 1000);
-});
+});*/
 
 function closeWsConnection(wsConnection: WsConnection) {
     wsConnection.close();

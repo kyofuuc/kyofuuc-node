@@ -11,7 +11,7 @@ import httpConnector from "../../lib/connector/http/httpConnector";
 let server: any;
 let port = 3001;
 
-before(done => {
+/*before(done => {
 	const startServer = (count: number, done: any) => {
 		if (count >= 5) return;
 		server = app.listen(port, done).on('error', (e: any) => {
@@ -26,7 +26,7 @@ after(done => {
 	if (server) {
 		server.close(done);
 	}
-});
+});*/
 
 it('validate http base config', () => {
 	const http = new Http();

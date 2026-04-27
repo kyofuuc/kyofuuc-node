@@ -1,13 +1,12 @@
 {
   "name": "kyofuuc",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "description": "Simple yet powerful HTTP, WS client with cache and offline support for Typescript + Javascript. For both browser and Node.",
   "browser": {
     "./lib/connector/http/httpConnector.js": "./lib/connector/http/xhrConnector.js",
-    "./lib/helper/shadows/node_classes.ts": "./lib/helper/shadows/browser_classes.ts",
-    "./lib/helper/shadows/browser_classes.ts": "./lib/helper/shadows/classes.ts"
+    "./lib/helper/shadows/node_classes.ts": "./lib/helper/shadows/browser_classes.ts"
   },
   "jsdelivr": "browser_dist/kyofuuc.min.js",
   "unpkg": "browser_dist/kyofuuc.min.js",
@@ -59,23 +58,26 @@
   },
   "homepage": "https://github.com/kyofuuc/kyofuuc-node#readme",
   "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/mocha": "^10.0.7",
-    "@types/node": "^22.13.4",
-    "express": "^4.19.2",
+    "@types/assert": "^1.5.11",
+    "@types/express": "^5.0.6",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.6.0",
+    "@types/ws": "^8.18.1",
+    "assert": "^2.1.0",
+    "express": "^5.2.1",
     "lz-string": "^1.5.0",
-    "mocha": "^10.7.0",
-    "ts-loader": "^9.5.1",
+    "mocha": "^11.7.5",
+    "ts-loader": "^9.5.7",
     "ts-node": "^10.9.2",
-    "tslib": "^2.6.3",
-    "typescript": "^5.5.4",
+    "tslib": "^2.8.1",
+    "typescript": "^6.0.3",
     "util": "^0.12.5",
-    "webpack": "^5.93.0",
-    "webpack-cli": "^5.1.4"
+    "webpack": "^5.106.2",
+    "webpack-cli": "^7.0.2"
   },
   "dependencies": {
     "buffer": "^6.0.3",
-    "ws": "^8.18.0",
+    "ws": "^8.20.0",
     "xmlhttprequest": "^1.8.0"
   }
 }

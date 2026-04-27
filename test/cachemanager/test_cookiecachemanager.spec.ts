@@ -1,4 +1,5 @@
 
+import { it } from "mocha";
 import assert from "assert";
 import { Mocks } from "../resc/Mocks";
 import { Method } from "../../lib/types";

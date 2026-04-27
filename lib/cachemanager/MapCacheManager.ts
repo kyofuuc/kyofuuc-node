@@ -78,8 +78,8 @@ export class MapCacheManager<T> implements CacheManager<T> {
         if (!resolve.exists) this._entriesCount++;
     }
 
-    async remove(configOrKey: string | HttpConfig): Promise<void> {
-        const resolve = await this._resolve(configOrKey);
+    async remove(configOrKey: string | HttpConfig, resolve?: { exists: boolean; key: string; }): Promise<void> {
+        if (!resolve) resolve = await this._resolve(configOrKey);
         if (!resolve.exists) return;
         delete this._options.bucket[resolve.key];
         this._entriesCount--;

@@ -108,7 +108,6 @@ dist
 .vscode*
 
 browser_dist/
-test/
 docs/
 build/
 logs
@@ -120,3 +119,4 @@ logs
 *.log
 *.log*
 out.txt
+mock.js
