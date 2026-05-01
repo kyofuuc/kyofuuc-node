@@ -1,13 +1,13 @@
 
 import { HandlerType } from "../../core";
-import classes from "../../helper/node_classes";
+import classes from "../../helper/shadows/classes";
 import { Defaults, ErrorCode, KyofuucObject, Utils } from "../../helper";
 import { HttpConfig, QueueRequest, RequestType, Response, ResponseType, transformRequestData, transformResponseData } from "../../types";
 
 // TODO treat proxy
 // TODO treat cancellation
 export default function xhrConnector(config: HttpConfig, queueRequest?: QueueRequest): Promise<Response> {
-    return new Promise((resolvePromise, rejectPromise) => {
+    return new Promise(async (resolvePromise, rejectPromise) => {
 
         let rejected = false;
 
@@ -16,26 +16,26 @@ export default function xhrConnector(config: HttpConfig, queueRequest?: QueueReq
             rejectPromise(error);
         }
 
-        function resolve(response: Response) {
+        async function resolve(response: Response) {
             if (rejected) return;
             if (response.__cached__) {
-                config.interceptor?.invoke(HandlerType.HTTP_POST_REQUEST, config);
-                config.interceptor?.invoke(HandlerType.HTTP_PRE_RESPONSE, config, response);
+                await config.interceptor?.invoke(HandlerType.HTTP_POST_REQUEST, config);
+                await config.interceptor?.invoke(HandlerType.HTTP_PRE_RESPONSE, config, response);
             }
-            config.interceptor?.invoke(HandlerType.HTTP_POST_RESPONSE, config, response);
+            await config.interceptor?.invoke(HandlerType.HTTP_POST_RESPONSE, config, response);
             resolvePromise(response);
         }
 
         if (config.dynamicConfig) config = config.dynamicConfig(config) as HttpConfig;
 
-        const preRequestCachedResults = config.interceptor?.invoke(HandlerType.HTTP_PRE_REQUEST, config).filter((r) => r?.__cached__ === true);
+        const preRequestCachedResults = (await config.interceptor?.invoke(HandlerType.HTTP_PRE_REQUEST, config))?.filter((r) => r?.__cached__ === true);
         if (preRequestCachedResults?.length) {
             resolve(preRequestCachedResults[0] as Response);
             return;
         }
 
         const headers = config.headers ?? {};
-        let data: Buffer | undefined = config.data;
+        let data: Buffer | string | undefined = config.data;
         const headerNamesMap = Object.keys(headers).reduce((acc: KyofuucObject<string>, header: string) => {
             acc[header.toLowerCase()] = header;
             return acc;
@@ -85,7 +85,7 @@ export default function xhrConnector(config: HttpConfig, queueRequest?: QueueReq
 
         const redirectsResponses: any[] = [];
 
-        function processResponse(res: any, lastReq: any, onSuccess: (result: Response) => void, onError: (error: Error) => void, finalRequest: boolean = false) {
+        async function processResponse(res: any, lastReq: any, onSuccess: (result: Response) => void, onError: (error: Error) => void, finalRequest: boolean = false) {
             const responseLength = Utils.length(res.responseData);
             if (config.maxContentLength && responseLength > config.maxContentLength) {
                 rejected = true;
@@ -101,7 +101,7 @@ export default function xhrConnector(config: HttpConfig, queueRequest?: QueueReq
                 statusText: res.statusMessage,
             };
             if (finalRequest) {
-                config.interceptor?.invoke(HandlerType.HTTP_PRE_RESPONSE, config, res);
+                await config.interceptor?.invoke(HandlerType.HTTP_PRE_RESPONSE, config, res);
             }
             if (!config.responseType) {
                 const contentType = ((response.headers ?? {})['content-type'] as string)?.toLowerCase();
@@ -132,12 +132,12 @@ export default function xhrConnector(config: HttpConfig, queueRequest?: QueueReq
             }
         }
 
-        function transportRequest(redirectCount: number) {
+        async function transportRequest(redirectCount: number) {
             let manuallyAborted = false;
             const req: XMLHttpRequest = new classes.XMLHttpRequest();
             req.open(config.method!.toUpperCase(), config.url!, true);
 
-            function onLoadEnd(onProcess?: (res: Response) => void) {
+            async function onLoadEnd(onProcess?: (res: Response) => void) {
                 let responseHeaders: KyofuucObject<number | string | string[]> = 'getAllResponseHeaders' in req ? Utils.parseHeaders(req.getAllResponseHeaders()) : {};
 
                 // handle redirects
@@ -163,7 +163,7 @@ export default function xhrConnector(config: HttpConfig, queueRequest?: QueueReq
                         transportRequest(redirectCount);
                         return;
                     }
-                    config.interceptor?.invoke(HandlerType.HTTP_REQUEST_MAXIMUM_REDIRECTS_REACHED, config, redirectsResponses);
+                    await config.interceptor?.invoke(HandlerType.HTTP_REQUEST_MAXIMUM_REDIRECTS_REACHED, config, redirectsResponses);
 
                 }
 
@@ -239,9 +239,9 @@ export default function xhrConnector(config: HttpConfig, queueRequest?: QueueReq
             if (config.onDownloadProgress) req.addEventListener("progress", config.onDownloadProgress);
             if (config.onUploadProgress) req.upload.addEventListener("progress", config.onUploadProgress);
 
-            req.send(data);
+            req.send(data as any);
             if (redirectCount === 0) {
-                config.interceptor?.invoke(HandlerType.HTTP_POST_REQUEST, config);
+                await config.interceptor?.invoke(HandlerType.HTTP_POST_REQUEST, config);
             }
         }
 

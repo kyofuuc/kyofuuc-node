@@ -1,11 +1,12 @@
 
-import classes from "./helper/node_classes";
+import classes from "./helper/shadows/classes";
 import xhrConnector from "./connector/http/xhrConnector";
 import httpConnector from "./connector/http/httpConnector";
 import {
     Utils,
     Defaults,
     KyofuucObject,
+    KyofuucEnvironment,
 } from "./helper";
 import {
     Config,
@@ -39,6 +40,7 @@ import {
     CacheManager,
     MapCacheManager,
     CookieCacheManager,
+    IndexDbCacheManager,
     StorageCacheManager,
     LocalStorageCacheManager,
     SessionStorageCacheManager,
@@ -83,6 +85,7 @@ export class Ffs implements IHttp, IWs {
     XMLHttpRequest = classes.XMLHttpRequest;
     CookieCacheManager = CookieCacheManager;
     StorageCacheManager = StorageCacheManager;
+    IndexDbCacheManager = IndexDbCacheManager;
     CompressionProcessor = CompressionProcessor;
     transformRequestData = transformRequestData;
     transformResponseData = transformResponseData;
@@ -105,6 +108,10 @@ export class Ffs implements IHttp, IWs {
 
     init(config?: HttpConfig | WsConfig) {
         return Ffs.init(config);
+    }
+
+    setEnvironment(env: KyofuucEnvironment) {
+        Defaults.ENVIRONMENT = env;
     }
 
     // http

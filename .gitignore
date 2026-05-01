@@ -107,8 +107,9 @@ dist
 .DS_Store
 .vscode*
 
-browser_dist/
-test/
+browser_dist/kyofuuc.js
+browser_dist/*.map
+browser_dist/*.txt
 docs/
 build/
 logs
@@ -120,3 +121,4 @@ logs
 *.log
 *.log*
 out.txt
+mock.js

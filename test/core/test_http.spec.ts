@@ -11,7 +11,7 @@ import httpConnector from "../../lib/connector/http/httpConnector";
 let server: any;
 let port = 3001;
 
-before(done => {
+/*before(done => {
 	const startServer = (count: number, done: any) => {
 		if (count >= 5) return;
 		server = app.listen(port, done).on('error', (e: any) => {
@@ -26,7 +26,7 @@ after(done => {
 	if (server) {
 		server.close(done);
 	}
-});
+});*/
 
 it('validate http base config', () => {
 	const http = new Http();
@@ -208,7 +208,7 @@ it('kyofuuc request basic auth', async () => {
 it('kyofuuc request retry', async () => {
 	let rserver: any;
 	let successful = 0;
-	const cache = MapCacheManager.getInstance(); cache.clear();
+	const cacheManager = MapCacheManager.getInstance(); cacheManager.clear();
 
 	EventQueue.getInstance().subscribe(EventQueueType.HTTP_REQUEST, (response: Response) => {
 		successful++;
@@ -220,7 +220,7 @@ it('kyofuuc request retry', async () => {
 	})
 
 	Http.getInstance().request(`http://127.0.0.1:2901/greet`, {
-		cache,
+		cacheManager,
 		retry: true,
 		method: "get",
 		responseType: "text",
@@ -232,7 +232,7 @@ it('kyofuuc request retry', async () => {
 		console.error(error.toJSON());
 	});
 	Http.getInstance().get(`http://127.0.0.1:2901/get`, {
-		cache,
+		cacheManager,
 		retry: true,
 		responseType: "text",
 		subscriptionKey: EventQueueType.HTTP_REQUEST,
@@ -240,7 +240,7 @@ it('kyofuuc request retry', async () => {
 		assert.equal(response.status, 150);
 		assert.equal(response.statusText, "Awaiting Retry");
 		rserver = app.listen(2901, () => {
-			ffs.retryRequests(cache);
+			ffs.retryRequests(cacheManager);
 		}).on('error', (e) => { });
 	}).catch(error => {
 		console.error(error.toJSON());
@@ -260,7 +260,7 @@ it('kyofuuc request maxRetry for retry', async () => {
 		retry: true,
 		method: "get",
 		responseType: "text",
-		cache: MapCacheManager.getInstance(),
+		cacheManager: MapCacheManager.getInstance(),
 		subscriptionKey: "maximum_retry_test_call",
 	}).then(processResponse).catch(error => {
 		console.error(error.toJSON());

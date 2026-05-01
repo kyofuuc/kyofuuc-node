@@ -4,6 +4,14 @@ import { BasicAuth, Config, HttpConfig, QuerySerializer, Response } from "../typ
 
 export type KyofuucObject<T> = { [index: string]: T; };
 
+export enum KyofuucEnvironment {
+
+    AUTO,
+    NODE,
+    BROWSER,
+
+}
+
 export enum ErrorCode {
 
     UNKNOWN_ERROR = "UNKNOWN_ERROR",
@@ -274,6 +282,7 @@ export const Utils = {
         return fullUrl.substring(0, protocolIndex + (protocolIndex > -1 ? 3 : 0)) + fullUrl.substring(atIndex + 1);
     },
 
+    // TODO seperate the query serializer
     buildUrlWithQuery(url: string, query: KyofuucObject<any> | URLSearchParams, querySerializer?: QuerySerializer) {
         let serializedQuery: string | undefined;
 
@@ -370,9 +379,6 @@ export const Utils = {
     kyofuucError(message: string | Error, config: Config, code: ErrorCode, request?: any, response?: Response) {
         let error = (typeof message === "string" ? new Error(message) : message) as any;
         error.config = config;
-        if (code) {
-            error.code = code;
-        }
         error.request = request;
         error.response = response;
         error.isKyofuucError = true;
@@ -380,7 +386,6 @@ export const Utils = {
         error.toJSON = function toJSON() {
             return {
                 name: this.name,
-                code: this.code,
                 stack: this.stack,
                 config: this.config,
                 number: this.number,
@@ -390,6 +395,7 @@ export const Utils = {
                 description: this.description,
                 status: this.response?.status,
                 columnNumber: this.columnNumber,
+                code: (code ? code : error.code),
                 responseBody: this.response?.body,
             };
         };

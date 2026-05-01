@@ -35,49 +35,49 @@ export class CookieCacheManager<T> implements CacheManager<T> {
         return CookieCacheManager.instance;
     }
 
-    usedSpace(): number {
+    async usedSpace(): Promise<number> {
         return this._usedSpace;
     }
 
-    availableSpace(): number {
+    async availableSpace(): Promise<number> {
         return this._availableSpace;
     }
 
-    calculateSpace(configOrKey: string | HttpConfig, value: T): number {
-        const resolve = this._resolve(configOrKey);
+    async calculateSpace(configOrKey: string | HttpConfig, value: T): Promise<number> {
+        const resolve = await this._resolve(configOrKey);
         const entryStr = Utils.safeStringify({ value, date: new Date() });
-        return (resolve.key.length + ((this._options.encryptor ? this._options.encryptor.encrypt(entryStr) : entryStr) + `#_kce_`).length + 2);
+        return (resolve.key.length + ((this._options.encryptor ? (await this._options.encryptor.encrypt(entryStr, true)) : entryStr) + `#_kce_`).length + 2);
     }
 
-    has(configOrKey: string | HttpConfig): boolean {
-        return this._resolve(configOrKey).exists;
+    async has(configOrKey: string | HttpConfig): Promise<boolean> {
+        return (await this._resolve(configOrKey)).exists;
     }
 
-    get(configOrKey: string | HttpConfig): { date: Date; value: T; } | undefined {
-        const resolve = this._resolve(configOrKey);
+    async get(configOrKey: string | HttpConfig): Promise<{ date: Date; value: T; } | undefined> {
+        const resolve = await this._resolve(configOrKey);
         if (!resolve.exists) return undefined;
         const dirtyValue = Utils.getCookie(this._options.bucket, resolve.key);
         const value = dirtyValue!.substring(0, dirtyValue!.lastIndexOf("#"));
-        const parsed = JSON.parse(this._options.encryptor ? this._options.encryptor.decrypt(value) : value);
+        const parsed = JSON.parse(this._options.encryptor ? await this._options.encryptor.decrypt(value, true) : value);
         return {
             value: parsed.value,
             date: new Date(parsed.date),
         };
     }
 
-    getValue(configOrKey: string | HttpConfig): T | undefined {
-        return (this.get(configOrKey)?? {}).value;
+    async getValue(configOrKey: string | HttpConfig): Promise<T | undefined> {
+        return (await this.get(configOrKey) ?? {}).value;
     }
 
-    set(configOrKey: string | HttpConfig, value: T): void {
-        const spaceAllocated = this.calculateSpace(configOrKey, value);
-        if (spaceAllocated > this.availableSpace()) {
+    async set(configOrKey: string | HttpConfig, value: T): Promise<void> {
+        const spaceAllocated = await this.calculateSpace(configOrKey, value);
+        if (spaceAllocated > await this.availableSpace()) {
             throw new NoSufficientCacheSpaceLeftError();
         }
-        const resolve = this._resolve(configOrKey);
+        const resolve = await this._resolve(configOrKey);
         const entryStr = Utils.safeStringify({ value, date: new Date(), });
-        const finalValue = (this._options.encryptor ? this._options.encryptor.encrypt(entryStr) : entryStr) + `#_kce_`;
-        if (resolve.exists) this.remove(resolve.key);
+        const finalValue = (this._options.encryptor ? await this._options.encryptor.encrypt(entryStr, true) : entryStr) + `#_kce_`;
+        if (resolve.exists) await this.remove(resolve.key);
         Utils.addCookie(this._options.bucket, {
             name: resolve.key,
             value: finalValue,
@@ -87,24 +87,24 @@ export class CookieCacheManager<T> implements CacheManager<T> {
         this._availableSpace -= spaceAllocated;
     }
 
-    remove(configOrKey: string | HttpConfig): void {
-        const resolve = this._resolve(configOrKey);
+    async remove(configOrKey: string | HttpConfig, resolve?: { exists: boolean; key: string; }): Promise<void> {
+        if (!resolve) resolve = await this._resolve(configOrKey);
         if (!resolve.exists) return;
-        const spaceToFree = this.calculateSpace(resolve.key, this.getValue(configOrKey) as any);
+        const spaceToFree = await this.calculateSpace(resolve.key, this.getValue(configOrKey) as any);
         this._usedSpace -= spaceToFree;
         this._availableSpace += spaceToFree;
         Utils.removeCookie(this._options.bucket, resolve.key);
     }
 
-    clear(): void {
+    async clear(): Promise<void> {
         const keys: string[] = [];
         Utils.getCookieEntries(this._options.bucket, (key: string, value: any) => {
             if (`${value}`.endsWith(`#_kce_`)) keys.push(key);
         });
-        for (const key of keys) this.remove(key);
+        for (const key of keys) await this.remove(key);
     }
 
-    find(cond: (key: string) => boolean) {
+    async find(cond: (key: string) => boolean) {
         const found: string[] = [];
         Utils.getCookieEntries(this._options.bucket, (key: string, _: any) => {
             if (cond(key)) found.push(key);
@@ -112,9 +112,9 @@ export class CookieCacheManager<T> implements CacheManager<T> {
         return found;
     }
 
-    private _resolve(configOrKey: string | HttpConfig): { exists: boolean; key: string; } {
+    private async _resolve(configOrKey: string | HttpConfig): Promise<{ exists: boolean; key: string; }> {
         let key = ((typeof configOrKey === "string") ? configOrKey : Utils.buildCacheKey(configOrKey));
-        key = (this._options.encryptKey && this._options.encryptor ? this._options.encryptor.encrypt(key) : key);
+        key = (this._options.encryptKey && this._options.encryptor ? await this._options.encryptor.encrypt(key, true) : key);
         const exists = this._options.bucket.cookie.includes(`${key}=`);
         return { key, exists };
     }

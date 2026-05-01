@@ -28,7 +28,7 @@ if (typeof localStorage === "undefined") {
 let server: any;
 let port = 3001;
 
-before(done => {
+/*before(done => {
     const startServer = (count: number, done: any) => {
         if (count >= 5) return;
         server = app.listen(port, done).on('error', (e: any) => {
@@ -43,7 +43,7 @@ after(done => {
     if (server) {
         server.close(done);
     }
-});
+});*/
 
 it('validate xhrConnector server greet', async () => {
     const response = await xhrConnector(Defaults.httpConfig({
@@ -203,10 +203,10 @@ it('validate xhrConnector test request basic auth', async () => {
 function _registerCacheInterceptors(config: HttpConfig) {
     if (!config.cache) return;
     if (!config.refreshCache) {
-        config.interceptor?.registerPreRequest((config?: HttpConfig) => {
-            const cached = config?.cache?.get(config);
+        config.interceptor?.registerPreRequest(async (config?: HttpConfig) => {
+            const cached = await config?.cacheManager?.get(config);
             if (!cached || (config?.cacheLifetime && cached?.date && (cached.date.getTime() - (new Date()).getTime()) >= config?.cacheLifetime)) {
-                if (cached && !config?.persistCache) config?.cache?.remove(config);
+                if (cached && !config?.persistCache) await config?.cacheManager?.remove(config);
                 return;
             }
             return {
@@ -216,17 +216,18 @@ function _registerCacheInterceptors(config: HttpConfig) {
             };
         });
     }
-    config.interceptor?.registerPostResponse((config?: HttpConfig, _?: KyofuucObject<any>, response?: Response) => {
+    config.interceptor?.registerPostResponse(async (config?: HttpConfig, _?: KyofuucObject<any>, response?: Response) => {
         if (response?.__cached__ || response?.status === 150) return;
-        config?.cache?.set(config, response);
+        await config?.cacheManager?.set(config, response);
     });
 }
 
 it('validate xhrConnector test with MapCacheManager cache', async () => {
     const interceptor = new Interceptor();
-    const cache = MapCacheManager.getInstance(); cache.clear();
+    const cacheManager = MapCacheManager.getInstance(); cacheManager.clear();
     const config1 = Defaults.httpConfig({
-        cache,
+        cache: true,
+        cacheManager,
         interceptor,
         key: "GREET_GET",
         url: `http://127.0.0.1:${port}/greet`,
@@ -234,7 +235,8 @@ it('validate xhrConnector test with MapCacheManager cache', async () => {
         validateStatus: (_) => true,
     });
     const config2 = Defaults.httpConfig({
-        cache,
+        cache: true,
+        cacheManager,
         interceptor,
         key: "GREET_POST",
         url: `http://127.0.0.1:${port}/greet`,
@@ -264,12 +266,13 @@ const documentImpl = Mocks.mockDocumentCookie();
 it('validate xhrConnector test with CookieCacheManager cache', async () => {
     const interceptor = new Interceptor();
     Defaults.MaxCookieLength = 9000000000;
-    const cache = new CookieCacheManager({
+    const cacheManager = new CookieCacheManager({
         bucket: documentImpl,
         encryptor: Base64Encryptor,
     });
     const config1 = Defaults.httpConfig({
-        cache,
+        cache: true,
+        cacheManager,
         interceptor,
         key: "GREET_GET",
         url: `http://127.0.0.1:${port}/greet`,
@@ -277,7 +280,8 @@ it('validate xhrConnector test with CookieCacheManager cache', async () => {
         validateStatus: (_) => true,
     });
     const config2 = Defaults.httpConfig({
-        cache,
+        cache: true,
+        cacheManager,
         interceptor,
         key: "GREET_POST",
         url: `http://127.0.0.1:${port}/greet`,
@@ -305,12 +309,13 @@ it('validate xhrConnector test with CookieCacheManager cache', async () => {
 
 it('validate xhrConnector test with LocalStorageCacheManager cache', async () => {
     const interceptor = new Interceptor();
-    const cache = new LocalStorageCacheManager({
+    const cacheManager = new LocalStorageCacheManager({
         bucket: localStorageImpl,
         encryptor: Base64Encryptor,
     });
     const config1 = Defaults.httpConfig({
-        cache,
+        cache: true,
+        cacheManager,
         interceptor,
         key: "GREET_GET",
         url: `http://127.0.0.1:${port}/greet`,
@@ -318,7 +323,8 @@ it('validate xhrConnector test with LocalStorageCacheManager cache', async () =>
         validateStatus: (_) => true,
     });
     const config2 = Defaults.httpConfig({
-        cache,
+        cache: true,
+        cacheManager,
         interceptor,
         key: "GREET_POST",
         url: `http://127.0.0.1:${port}/greet`,
@@ -346,12 +352,13 @@ it('validate xhrConnector test with LocalStorageCacheManager cache', async () =>
 
 it('validate xhrConnector test with SessionStorageCacheManager cache', async () => {
     const interceptor = new Interceptor();
-    const cache = new SessionStorageCacheManager({
+    const cacheManager = new SessionStorageCacheManager({
         bucket: sessionStorageImpl,
         encryptor: Base64Encryptor,
     });
     const config1 = Defaults.httpConfig({
-        cache,
+        cache: true,
+        cacheManager,
         interceptor,
         key: "GREET_GET",
         url: `http://127.0.0.1:${port}/greet`,
@@ -359,7 +366,8 @@ it('validate xhrConnector test with SessionStorageCacheManager cache', async () 
         validateStatus: (_) => true,
     });
     const config2 = Defaults.httpConfig({
-        cache,
+        cache: true,
+        cacheManager,
         interceptor,
         key: "GREET_POST",
         url: `http://127.0.0.1:${port}/greet`,

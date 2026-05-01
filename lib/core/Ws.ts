@@ -210,12 +210,12 @@ export class Ws implements IWs {
 
     onOpen(cb: (ws: IWs, event: any, options?: KyofuucObject<any>) => void, options?: KyofuucObject<any>): void {
         if (!this._isConnected()) throw new ConnectionClosedError();
-        this._config?.interceptor?.registerOnWsOpen(((_?: Config, options?: KyofuucObject<any>, event?: any) => cb(this, event, options)).bind(this), options);
+        this._config?.interceptor?.registerOnWsOpen((async (_?: Config, options?: KyofuucObject<any>, event?: any) => cb(this, event, options)).bind(this), options);
     }
 
     onClose(cb: (ws: IWs, event: any, options?: KyofuucObject<any>) => void, options?: KyofuucObject<any>, always?: boolean): void {
         if (!this._isConnected()) throw new ConnectionClosedError();
-        this._config?.interceptor?.registerOnWsClose(((_?: Config, options?: KyofuucObject<any>, event?: any) => {
+        this._config?.interceptor?.registerOnWsClose((async (_?: Config, options?: KyofuucObject<any>, event?: any) => {
             if (!always && this._state !== WsState.DISCONNECTED) return;
             cb(this, event, options);
         }).bind(this), options);
@@ -223,12 +223,12 @@ export class Ws implements IWs {
 
     onError(cb: (ws: IWs, error: Error, options?: KyofuucObject<any>) => void, options?: KyofuucObject<any>): void {
         if (!this._isConnected()) throw new ConnectionClosedError();
-        this._config?.interceptor?.registerOnWsError(((_?: Config, options?: KyofuucObject<any>, event?: any) => cb(this, event, options)).bind(this), options);
+        this._config?.interceptor?.registerOnWsError((async (_?: Config, options?: KyofuucObject<any>, event?: any) => cb(this, event, options)).bind(this), options);
     }
 
     onStateChange(cb: (ws: IWs, state: WsState, options?: KyofuucObject<any>) => void, options?: KyofuucObject<any>): void {
         if (!this._isConnected()) throw new ConnectionClosedError();
-        this._config?.interceptor?.registerOnWsStateChange(((_?: Config, options?: KyofuucObject<any>, event?: any) => cb(this, event, options)).bind(this), options);
+        this._config?.interceptor?.registerOnWsStateChange((async (_?: Config, options?: KyofuucObject<any>, event?: any) => cb(this, event, options)).bind(this), options);
     }
 
     onMessage(cb: (ws: IWs, event: any, message: any, options?: KyofuucObject<any>) => void, options?: KyofuucObject<any>): void {
@@ -236,7 +236,7 @@ export class Ws implements IWs {
         if (!this._messageInterceptor) {
             this._messageInterceptor = new Interceptor();
         }
-        this._messageInterceptor?.registerOnWsMessage(((_?: Config, options?: KyofuucObject<any>, event?: any) => {
+        this._messageInterceptor?.registerOnWsMessage((async (_?: Config, options?: KyofuucObject<any>, event?: any) => {
             cb(this, event.event, event.message, options);
         }).bind(this), options);
     }
@@ -248,11 +248,11 @@ export class Ws implements IWs {
 
     private _registerInterceptors() {
         if (!this._config!.protocol || this._config!.protocol === "text") {
-            this._config!.requestType = RequestType.TEXT;
-            this._config!.responseType = RequestType.TEXT;
+            this._config!.requestType = RequestType.RAW_TEXT;
+            this._config!.responseType = RequestType.RAW_TEXT;
         } else if (this._config!.protocol === "json") {
-            this._config!.requestType = RequestType.JSON;
-            this._config!.responseType = RequestType.JSON;
+            this._config!.requestType = RequestType.RAW_JSON;
+            this._config!.responseType = RequestType.RAW_JSON;
         }
 
         this.onOpen(((_: IWs, __: any, ___?: KyofuucObject<any>) => {
@@ -264,12 +264,12 @@ export class Ws implements IWs {
 
         this.onClose(((_: IWs, __: any, ___?: KyofuucObject<any>) => {
             if (this._state !== WsState.DISCONNECTING && this._config?.reconnect) {
-                if (this._lastReconnectionCount < (this._config?.maxReconnect ?? 0)) {
+                if (!this._config?.maxReconnect || (this._lastReconnectionCount < this._config?.maxReconnect)) {
                     this._reconnectionCount++;
                     this._lastReconnectionCount++;
                     this._nextReconnectionDelay = (this._config?.reconnectIntervalByPower
                         ? Math.pow((this._config.reconnectInterval ?? 0), this._reconnectionCount)
-                        : this._config.reconnectInterval) ?? 0
+                        : (this._config.reconnectInterval ?? 0));
                     setTimeout(this.reconnect.bind(this), this._nextReconnectionDelay * 1000);
                     return;
                 }
@@ -278,7 +278,7 @@ export class Ws implements IWs {
             this._config?.interceptor?.invoke(HandlerType.WS_STATE_CHANGE, this._config, this._state);
         }).bind(this), undefined, true);
 
-        this._config?.interceptor?.registerOnWsMessage(((_?: Config, __?: KyofuucObject<any>, message?: any) => {
+        this._config?.interceptor?.registerOnWsMessage((async (_?: Config, __?: KyofuucObject<any>, message?: any) => {
             this._state = WsState.PROCESSING_OUTGOING_MESSAGE;
             this._config?.interceptor?.invoke(HandlerType.WS_STATE_CHANGE, this._config, this._state);
             transformResponseData(this._config!, this._config!, message.data, (result: Response) => {

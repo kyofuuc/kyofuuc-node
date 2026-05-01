@@ -16,7 +16,7 @@ export enum HandlerType {
     HTTP_REQUEST_MAXIMUM_REDIRECTS_REACHED = "HTTP_REQUEST_MAXIMUM_REDIRECTS_REACHED",
 }
 
-export type HandlerCallback = (config?: Config, options?: KyofuucObject<any>, response?: any) => KyofuucObject<any> | void;
+export type HandlerCallback = (config?: Config, options?: KyofuucObject<any>, response?: any) => (Promise<KyofuucObject<any> | void> | KyofuucObject<any> | void);
 
 export interface Handler {
     type: HandlerType;
@@ -92,13 +92,13 @@ export class Interceptor {
         return Object.values(this._handlers[`${type}`] ?? {});
     }
 
-    invoke(type: HandlerType, config?: Config, response?: any): KyofuucObject<any>[] {
+    async invoke(type: HandlerType, config?: Config, response?: any): Promise<KyofuucObject<any>[]> {
         const results: KyofuucObject<any>[] = [];
         const handlers = Object.values(this._handlers[`${type}`] ?? {});
 
         for (const handler of handlers) {
             if (handler.when && !handler.when(config)) continue;
-            const result = handler.cb(config, handler.options, response);
+            const result = await handler.cb(config, handler.options, response);
             if (result === null || result === undefined) continue;
             results.push(result);
         }

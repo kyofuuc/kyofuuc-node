@@ -1,5 +1,6 @@
 
 import { Interceptor } from "./Interceptor";
+import { PromiscuousPromise } from "./PromiscuousPromise";
 import { EventQueue, EventQueueType } from "./EventQueue";
 import { Defaults, KyofuucObject, Utils } from "../helper";
 import { Config, Response, HttpConfig, Method } from "../types";
@@ -81,6 +82,9 @@ export class Http implements IHttp {
             mergedConfig.auth = { username: mergedConfig.parsed.username, password: mergedConfig.parsed.password };
         }
         this._registerCacheInterceptors(mergedConfig);
+        if (mergedConfig.promiscuous) {
+            return (new PromiscuousPromise(mergedConfig.connector!, mergedConfig, this.queueRequest)).get();
+        }
         return mergedConfig.connector!(mergedConfig, this.queueRequest);
     }
 
@@ -134,15 +138,13 @@ export class Http implements IHttp {
     }
 
     private _registerCacheInterceptors(config: HttpConfig) {
-        if (!config.cacheManager) return;
+        if (!config.cacheManager || !config.cache) return;
         if (!config.refreshCache) {
-            config.interceptor?.registerPreRequest((config?: HttpConfig) => {
-                if (config?.cache) {
-                    if ((typeof config?.cache === "function" && !config?.cache(config, "REQUEST")) || (typeof config?.cache === "boolean" && !config?.cache)) return;
-                }
-                const cached = config?.cacheManager?.get(config);
+            config.interceptor?.registerPreRequest(async (config?: HttpConfig) => {
+                if ((typeof config?.cache === "function" && !config?.cache(config, "REQUEST")) || (!config?.cache)) return;
+                const cached = await config?.cacheManager?.get(config);
                 if (!cached || (config?.cacheLifetime && cached?.date && ((new Date()).getTime() - cached.date.getTime()) >= config?.cacheLifetime)) {
-                    if (cached && !config?.persistCache) config?.cacheManager?.remove(config);
+                    if (cached && !config?.persistCache) await config?.cacheManager?.remove(config);
                     return;
                 }
                 return {
@@ -152,10 +154,10 @@ export class Http implements IHttp {
                 };
             });
         }
-        config.interceptor?.registerPostResponse((config?: HttpConfig, _?: KyofuucObject<any>, response?: Response) => {
-            if ((typeof config?.cache === "function" && !config?.cache(config, "RESPONSE", response)) || (typeof config?.cache === "boolean" && !config?.cache)) return;
+        config.interceptor?.registerPostResponse(async (config?: HttpConfig, _?: KyofuucObject<any>, response?: Response) => {
+            if ((typeof config?.cache === "function" && !config?.cache(config, "RESPONSE", response)) || (!config?.cache)) return;
             if (response?.__cached__ || response?.status === 150) return;
-            config?.cacheManager?.set(config, response);
+            await config?.cacheManager?.set(config, response);
         });
     }
 

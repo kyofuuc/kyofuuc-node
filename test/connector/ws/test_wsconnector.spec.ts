@@ -10,7 +10,7 @@ let server: any;
 let port = 4000;
 const openedWSConnections: WsConnection[] = [];
 
-before((done) => {
+/*before((done) => {
     const startServer = (count: number, done: any) => {
         if (count >= 5) return;
         server = (new (wsapp as any)()).listen(port, done).on('error', (e: any) => {
@@ -28,7 +28,7 @@ after(done => {
             clearInterval(intervalId);
         }
     }, 1000);
-});
+});*/
 
 function closeWsConnection(wsConnection: WsConnection) {
     wsConnection.close();
@@ -132,26 +132,26 @@ it('validate wsConnector interceptor [text#sub-protocol]', async () => {
         interceptor,
     });
 
-    interceptor.registerOnWsOpen((_?: WsConfig, __?: KyofuucObject<any>, event?: any) => {
+    interceptor.registerOnWsOpen(async (_?: WsConfig, __?: KyofuucObject<any>, event?: any) => {
         assert.equal(event.target, wsConnection);
         assert.equal(event.target.readyState, 1);
         openedWSConnections.push(wsConnection);
     });
-    interceptor.registerOnWsOpen((_?: WsConfig, __?: KyofuucObject<any>, event?: any) => {
+    interceptor.registerOnWsOpen(async (_?: WsConfig, __?: KyofuucObject<any>, event?: any) => {
         assert.equal(event.target, wsConnection);
         assert.equal(event.target.readyState, 1);
         wsConnection.send("Hello World!");
         assert.equal(event.target.bufferedAmount, 0);
     });
-    interceptor.registerOnWsMessage((_?: WsConfig, __?: KyofuucObject<any>, event?: any) => {
+    interceptor.registerOnWsMessage(async (_?: WsConfig, __?: KyofuucObject<any>, event?: any) => {
         assert.equal(event.target, wsConnection);
         assert.equal(event.data, "RECEIVED: Hello World!");
         closeWsConnection(event.target);
     });
-    interceptor.registerOnWsClose((_?: WsConfig, __?: KyofuucObject<any>, event?: any) => {
+    interceptor.registerOnWsClose(async (_?: WsConfig, __?: KyofuucObject<any>, event?: any) => {
         assert.equal(event.target.readyState, 3);
     });
-    interceptor.registerOnWsError((_?: WsConfig, __?: KyofuucObject<any>, event?: any) => {
+    interceptor.registerOnWsError(async (_?: WsConfig, __?: KyofuucObject<any>, event?: any) => {
         assert.equal(event.target, wsConnection2);
         assert.equal(event.target.readyState, 2);
     });
