@@ -55,3 +55,7 @@ export const Defaults = {
     },
 
 }
+
+if (Defaults.ENVIRONMENT === KyofuucEnvironment.AUTO) {
+    Defaults.ENVIRONMENT = (typeof window === "undefined" ? KyofuucEnvironment.NODE : KyofuucEnvironment.BROWSER);
+}

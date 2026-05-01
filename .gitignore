@@ -107,7 +107,9 @@ dist
 .DS_Store
 .vscode*
 
-browser_dist/
+browser_dist/kyofuuc.js
+browser_dist/*.map
+browser_dist/*.txt
 docs/
 build/
 logs
