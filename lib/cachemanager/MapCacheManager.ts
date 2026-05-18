@@ -66,8 +66,11 @@ export class MapCacheManager<T> implements CacheManager<T> {
     }
 
     async set(configOrKey: string | HttpConfig, value: T): Promise<void> {
-        if (this.calculateSpace(configOrKey, value) > this.availableSpace()) {
-            throw new NoSufficientCacheSpaceLeftError();
+        const available = await this.availableSpace();
+        const spaceAllocated = await this.calculateSpace(configOrKey, value);
+        if (spaceAllocated > available) {
+            Utils.warnOrThrow(new NoSufficientCacheSpaceLeftError(spaceAllocated, await this.usedSpace(), available), this._options.warnOnLowSpace, Defaults.WARN_WRITER);
+            return;
         }
         const resolve = await this._resolve(configOrKey);
         const entryStr = Utils.safeStringify({

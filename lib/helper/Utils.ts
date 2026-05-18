@@ -502,4 +502,11 @@ export const Utils = {
         return date1.getTime() - date2.getTime();
     },
 
+    warnOrThrow(error: any, warn: boolean = false, warnWriter?: (...error: any) => any) {
+        if (!warn) {
+            throw error;
+        }
+        warnWriter?.(error);
+    },
+
 }

@@ -99,9 +99,11 @@ export class IndexDbCacheManager<T> implements CacheManager<T> {
             date: new Date(),
         });
         const finalValue = (this._options.encryptor ? await this._options.encryptor.encrypt(entryStr, true) : entryStr);
+        const available = await this.availableSpace();
         const spaceAllocated = finalValue.length;
-        if (spaceAllocated > await this.availableSpace()) {
-            throw new NoSufficientCacheSpaceLeftError();
+        if (spaceAllocated > available) {
+            Utils.warnOrThrow(new NoSufficientCacheSpaceLeftError(spaceAllocated, await this.usedSpace(), available), this._options.warnOnLowSpace, Defaults.WARN_WRITER);
+            return;
         }
         await this.putEntryInDb(resolve.key, finalValue);
         this._usedSpace += spaceAllocated;

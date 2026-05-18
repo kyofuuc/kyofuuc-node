@@ -5,6 +5,7 @@ import { Encryptor } from "../encryptor";
 export type CacheManagerOption<T1, T2, T3 = any> = {
     bucket?: T3;
     encryptKey?: boolean;
+    warnOnLowSpace?: boolean;
     encryptor?: Encryptor<T1, T2>;
 }
 

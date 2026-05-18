@@ -7,6 +7,7 @@ export const Defaults = {
     classes: null,
     VERSION: "0.0.3",
     INDEXDB_VERSION: 1,
+    WARN_WRITER: console.warn,
     MaxObjectEntrySize: 999999,
     ENVIRONMENT: KyofuucEnvironment.AUTO,
     MaxCookieLength: 3800, // 3800 Bytes

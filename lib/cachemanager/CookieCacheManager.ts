@@ -71,8 +71,10 @@ export class CookieCacheManager<T> implements CacheManager<T> {
 
     async set(configOrKey: string | HttpConfig, value: T): Promise<void> {
         const spaceAllocated = await this.calculateSpace(configOrKey, value);
-        if (spaceAllocated > await this.availableSpace()) {
-            throw new NoSufficientCacheSpaceLeftError();
+        const available = await this.availableSpace();
+        if (spaceAllocated > available) {
+            Utils.warnOrThrow(new NoSufficientCacheSpaceLeftError(spaceAllocated, await this.usedSpace(), available), this._options.warnOnLowSpace, Defaults.WARN_WRITER);
+            return;
         }
         const resolve = await this._resolve(configOrKey);
         const entryStr = Utils.safeStringify({ value, date: new Date(), });

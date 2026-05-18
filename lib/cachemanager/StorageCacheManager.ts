@@ -74,8 +74,10 @@ export class StorageCacheManager<T> implements CacheManager<T> {
         });
         const finalValue = (this._options.encryptor ? await this._options.encryptor.encrypt(entryStr, true) : entryStr) + `#_kce_`;
         const spaceAllocated = finalValue.length;
-        if (spaceAllocated > await this.availableSpace()) {
-            throw new NoSufficientCacheSpaceLeftError();
+        const available = await this.availableSpace();
+        if (spaceAllocated > available) {
+            Utils.warnOrThrow(new NoSufficientCacheSpaceLeftError(spaceAllocated, await this.usedSpace(), available), this._options.warnOnLowSpace, Defaults.WARN_WRITER);
+            return;
         }
         if (resolve.exists) await this.remove(resolve.key);
         await this._options.bucket.setItem(resolve.key, finalValue);

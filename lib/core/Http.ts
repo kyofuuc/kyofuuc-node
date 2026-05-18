@@ -157,6 +157,7 @@ export class Http implements IHttp {
         config.interceptor?.registerPostResponse(async (config?: HttpConfig, _?: KyofuucObject<any>, response?: Response) => {
             if ((typeof config?.cache === "function" && !config?.cache(config, "RESPONSE", response)) || (!config?.cache)) return;
             if (response?.__cached__ || response?.status === 150) return;
+            await config?.cacheManager?.remove(config);
             await config?.cacheManager?.set(config, response);
         });
     }
